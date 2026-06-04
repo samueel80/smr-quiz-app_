@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMR Test Prep - Simulador Premium</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">🚀</span>
+                <h1>SMR <span class="accent-text">Test Prep Pro</span></h1>
+            </div>
+            <div class="header-controls">
+                <div class="streak-badge" id="streakBadge" title="Racha de estudio diaria (¡Estudia todos los días!)">
+                    🔥 <span id="streakCount">0</span> días
+                </div>
+                <button id="studyGuideBtn" class="btn secondary-btn study-nav-btn">📖 Guía de Estudio</button>
+                <button id="soundToggleBtn" class="control-btn" title="Activar/Desactivar Sonido">
+                    <span id="soundIcon">🔊</span>
+                </button>
+                <div class="stats-badge">
+                    <span id="totalQuestionsCount">0</span> Preguntas
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- PANTALLA 1: DASHBOARD -->
+            <section id="dashboardScreen" class="screen active">
+                <!-- PANEL DE ESTADÍSTICAS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper blue">📚</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Asignaturas</span>
+                            <span class="stat-value" id="subjectsCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper yellow">⭐</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Favoritos</span>
+                            <span class="stat-value" id="starredCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper green">📈</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Acierto Medio</span>
+                            <span class="stat-value" id="avgScore">0%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper purple">🏆</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Logros</span>
+                            <span class="stat-value" id="achievementsCount">0/6</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-layout">
+                    <!-- COLUMNA IZQUIERDA: ASIGNATURAS -->
+                    <div class="panel-card subjects-panel">
+                        <div class="panel-header">
+                            <h3><span class="step-num">1</span> Selecciona Asignaturas</h3>
+                            <span class="panel-subtitle">Haz clic para marcar. Se muestra tu nivel de dominio 📊</span>
+                        </div>
+                        
+                        <div id="subjectsGrid" class="subjects-grid">
+                            <!-- Tarjetas generadas dinámicamente -->
+                        </div>
+
+                        <div class="subject-actions">
+                            <button id="selectAllSubjectsBtn" class="text-btn">Seleccionar todas</button>
+                            <button id="deselectAllSubjectsBtn" class="text-btn">Deseleccionar todas</button>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: AJUSTES -->
+                    <div class="panel-card settings-panel">
+                        <div class="panel-header">
+                            <h3><span class="step-num">2</span> Parámetros del Test</h3>
+                        </div>
+
+                        <!-- Origen (Oficial vs Repaso) -->
+                        <div class="setting-group">
+                            <label>Origen de Preguntas:</label>
+                            <div class="source-chips" id="sourceChips">
+                                <button class="chip-btn active" data-value="all">Todas</button>
+                                <button class="chip-btn" data-value="oficial">Solo Cesur (Oficial)</button>
+                                <button class="chip-btn" data-value="repaso">Solo Repaso</button>
+                            </div>
+                        </div>
+
+                        <!-- Modo -->
+                        <div class="setting-group">
+                            <label>Modo de Test:</label>
+                            <div class="mode-chips" id="modeChips">
+                                <button class="chip-btn active" data-value="practice">
+                                    <span class="chip-icon">🎯</span>
+                                    <span class="chip-text">Práctica</span>
+                                </button>
+                                <button class="chip-btn" data-value="exam">
+                                    <span class="chip-icon">⏱️</span>
+                                    <span class="chip-text">Examen</span>
+                                </button>
+                                <button class="chip-btn" data-value="smart" title="Prioriza preguntas falladas o no respondidas">
+                                    <span class="chip-icon">🧠</span>
+                                    <span class="chip-text">Inteligente</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Límite de preguntas -->
+                        <div class="setting-group">
+                            <label>Número de Preguntas:</label>
+                            <div class="count-chips" id="questionLimitChips">
+                                <button class="chip-btn" data-value="10">10</button>
+                                <button class="chip-btn active" data-value="20">20</button>
+                                <button class="chip-btn" data-value="50">50</button>
+                                <button class="chip-btn" data-value="all">Todas</button>
+                            </div>
+                        </div>
+
+                        <!-- Temporizador de Examen -->
+                        <div class="setting-group" id="examTimerGroup" style="display: none;">
+                            <label for="timeLimitRange">Tiempo Límite: <span id="timeLimitLabel">20</span> minutos</label>
+                            <input type="range" id="timeLimitRange" min="5" max="120" step="5" value="20" class="slider">
+                        </div>
+
+                        <!-- Filtro de Búsqueda -->
+                        <div class="setting-group">
+                            <label for="searchFilter">Filtrar por palabra clave (opcional):</label>
+                            <input type="text" id="searchFilter" placeholder="Ej: IP, DHCP, RAID, CPU...">
+                        </div>
+
+                        <!-- Iniciar / Desafío Rápido -->
+                        <div class="start-actions-row">
+                            <button id="startTestBtn" class="btn primary-btn start-btn" disabled>
+                                ¡Iniciar Cuestionario! 🚀
+                            </button>
+                            <button id="quickChallengeBtn" class="btn secondary-btn challenge-btn" title="Examen rápido de 10 preguntas aleatorias de todas las asignaturas">
+                                Desafío Rápido ⚡
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DE HISTORIAL, LOGROS E IMPORTACIÓN -->
+                <div class="dashboard-footer-grid">
+                    <div class="panel-card drop-zone-card">
+                        <h3><span class="step-num">3</span> Copias e Importación</h3>
+                        <div id="dropZone" class="drop-zone">
+                            <span class="upload-icon">📥</span>
+                            <p>Arrastra archivos <strong>.json</strong> aquí o haz clic para buscarlos</p>
+                            <input type="file" id="fileInput" accept=".json" multiple style="display: none;">
+                        </div>
+                        
+                        <div class="backup-actions">
+                            <button id="exportBackupBtn" class="btn secondary-btn text-btn">📤 Guardar Progreso (Copia)</button>
+                            <button id="importBackupBtn" class="btn secondary-btn text-btn">📥 Restaurar Progreso</button>
+                            <input type="file" id="backupFileInput" accept=".json" style="display: none;">
+                        </div>
+                        
+                        <button id="clearDatabaseBtn" class="btn danger-btn text-btn">Borrar base de datos</button>
+                    </div>
+
+                    <!-- Panel de Logros -->
+                    <div class="panel-card achievements-card">
+                        <h3>Tus Logros Académicos</h3>
+                        <div id="achievementsGrid" class="achievements-list-grid">
+                            <!-- Logros generados dinámicamente -->
+                        </div>
+                    </div>
+
+                    <div class="panel-card history-card" style="grid-column: 1 / -1;">
+                        <h3>Historial de Intentos</h3>
+                        <div id="historyList" class="history-list">
+                            <p class="empty-history">Aún no has realizado ningún test. ¡Comienza ahora!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANTALLA 2: TEST RUNNER -->
+            <section id="testScreen" class="screen">
+                <div class="test-header">
+                    <div class="test-meta">
+                        <span id="currentQuestionNum" class="question-counter">Pregunta 1 de 10</span>
+                        <div class="test-indicators">
+                            <span id="questionSourceTag" class="source-badge">Oficial</span>
+                            <button id="bookmarkActiveBtn" class="star-btn" title="Añadir a favoritos">⭐</button>
+                            <span id="testTimer" class="timer-badge">00:00</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="progressBar" class="progress-bar" style="width: 10%;"></div>
+                    </div>
+                </div>
+
+                <div class="question-container">
+                    <div class="question-subject-tag" id="questionSubjectTag">Asignatura</div>
+                    <h2 id="questionText">¿Cargando pregunta?</h2>
+                    
+                    <div id="optionsContainer" class="options-container">
+                        <!-- Botones de opciones cargados dinámicamente -->
+                    </div>
+                </div>
+
+                <div id="explanationBox" class="explanation-box" style="display: none;">
+                    <span class="exp-icon">💡</span>
+                    <div class="exp-content">
+                        <strong>Respuesta Correcta:</strong> <span id="explanationText"></span>
+                    </div>
+                </div>
+
+                <div class="test-navigation">
+                    <button id="prevBtn" class="btn secondary-btn">◀ Anterior</button>
+                    <button id="nextBtn" class="btn primary-btn">Siguiente ▶</button>
+                    <button id="finishBtn" class="btn success-btn" style="display: none;">Enviar Respuestas 🏁</button>
+                </div>
+            </section>
+
+            <!-- PANTALLA 3: RESULTADOS -->
+            <section id="resultsScreen" class="screen">
+                <div class="results-card">
+                    <div class="score-circle-container">
+                        <div class="score-circle">
+                            <span id="scorePercent">0%</span>
+                            <span class="score-label">Acierto</span>
+                        </div>
+                    </div>
+                    <div class="results-details">
+                        <h2>¡Cuestionario Finalizado!</h2>
+                        <p id="scoreText">Has acertado 0 de 0 preguntas.</p>
+                        
+                        <div class="stats-row">
+                            <div class="stat-box">
+                                <span class="stat-val" id="timeSpentVal">0s</span>
+                                <span class="stat-lbl">Tiempo</span>
+                            </div>
+                            <div class="stat-box success">
+                                <span class="stat-val" id="correctAnswersVal">0</span>
+                                <span class="stat-lbl">Correctas</span>
+                            </div>
+                            <div class="stat-box danger">
+                                <span class="stat-val" id="wrongAnswersVal">0</span>
+                                <span class="stat-lbl">Falladas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <div class="review-header">
+                        <h3>Revisión de Preguntas</h3>
+                        <div class="filter-chips" id="reviewFilterChips">
+                            <button class="chip-btn active" data-filter="all">Todas</button>
+                            <button class="chip-btn" data-filter="correct">Correctas</button>
+                            <button class="chip-btn" data-filter="wrong">Falladas</button>
+                        </div>
+                    </div>
+
+                    <div id="reviewContainer" class="review-container">
+                        <!-- Preguntas revisadas dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button id="restartBtn" class="btn primary-btn">Volver al Panel Principal</button>
+                </div>
+            </section>
+
+            <!-- PANTALLA 4: GUÍA DE ESTUDIO / LISTADO COMPLETO -->
+            <section id="studyScreen" class="screen">
+                <div class="study-header-panel">
+                    <div class="study-title-row">
+                        <button id="backToDashboardBtn" class="btn secondary-btn">◀ Volver</button>
+                        <h2>📖 Guía de Estudio Completa</h2>
+                    </div>
+                    <p>Revisa libremente todo el temario de preguntas y respuestas filtrado por asignaturas.</p>
+                    
+                    <div class="study-filters">
+                        <div class="form-group">
+                            <label for="studySubjectSelect">Selecciona Asignatura:</label>
+                            <select id="studySubjectSelect">
+                                <!-- Cargado dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studySearch">Buscar en preguntas:</label>
+                            <input type="text" id="studySearch" placeholder="Escribe palabras clave...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestañas para móviles en Guía de Estudio -->
+                <div class="study-tabs" id="studyTabs">
+                    <button class="study-tab-btn active" data-tab="oficial">Cesur (Oficial)</button>
+                    <button class="study-tab-btn" data-tab="repaso">Repaso (IA)</button>
+                </div>
+
+                <!-- Columnas de Preguntas -->
+                <div class="study-grid">
+                    <!-- Columna Oficiales -->
+                    <div class="study-column column-oficial active">
+                        <div class="column-header oficial">
+                            <h3>Preguntas Oficiales (Cesur)</h3>
+                            <span class="column-badge" id="studyOficialCount">0</span>
+                        </div>
+                        <div class="study-list" id="studyOficialList">
+                            <!-- Rellenado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Columna Repaso -->
+                    <div class="study-column column-repaso">
+                        <div class="column-header repaso">
+                            <h3>Preguntas de Repaso (IA)</h3>
+                            <span class="column-badge" id="studyRepasoCount">0</span>
+                        </div>
+                        <div class="study-list" id="studyRepasoList">
+                            <!-- Rellenado dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

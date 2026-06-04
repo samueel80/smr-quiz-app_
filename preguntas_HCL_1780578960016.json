@@ -1,0 +1,402 @@
+[
+  {
+    "question": "¿Qué modelos suele aglutinar el cloud híbrido?",
+    "options": [
+      "El conjunto de varias nubes públicas",
+      "Un modelo compuesto por una o más nubes privadas y una o más nubes públicas",
+      "El conjunto de varias nubes privadas"
+    ],
+    "answer": "Un modelo compuesto por una o más nubes privadas y una o más nubes públicas",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Sabrías por qué surgió el cloud computing?",
+    "options": [
+      "Surgió como una opción de algunas grandes compañías para aprovechar el uso de sus centros de datos durante sus periodos de inactividad, que corresponderían a los días festivos y períodos entre jornadas de producción",
+      "Surgió como una opción de algunas grandes compañías para aprovechar el uso de sus centros de datos durante sus periodos de inactividad, que corresponderían a los intervalos de espera entre turnos en horario productivo",
+      "Surgió por la gran cantidad de información virtual que manejan las grandes compañías y la incapacidad de conservarla de manera física"
+    ],
+    "answer": "Surgió como una opción de algunas grandes compañías para aprovechar el uso de sus centros de datos durante sus periodos de inactividad, que corresponderían a los días festivos y períodos entre jornadas de producción",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Por qué la dependencia de las comunicaciones es una debilidad que arrastra el cloud público en cuanto a la continuidad del negocio?",
+    "options": [
+      "Un negocio basado solo en cloud pública depende exclusivamente de su acceso a la red; si esta falla, puede causar un grave problema si no se tiene algún tipo de ubicación alternativa",
+      "Porque existe poca transparencia de los proveedores para facilitar su ayuda en cualquier incidencia que pudiera ocurrir",
+      "Porque requiere de conocimientos amplios de cloud y de solución de posibles fallos"
+    ],
+    "answer": "Un negocio basado solo en cloud pública depende exclusivamente de su acceso a la red; si esta falla, puede causar un grave problema si no se tiene algún tipo de ubicación alternativa",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué significa el término disaster recovery?",
+    "options": [
+      "Es un término propio de la ciberseguridad informática, pero no está relacionado con el trabajo en cloud",
+      "Es una combinación de recursos que funciona como uno de los mejores métodos de recuperación ante desastres",
+      "Es el proceso por el que se realiza la migración de todas las aplicaciones empresariales a la nube híbrida"
+    ],
+    "answer": "Es una combinación de recursos que funciona como uno de los mejores métodos de recuperación ante desastres",
+    "subject": "HCL"
+  },
+  {
+    "question": "Actualmente, ¿cuál es el líder en servicios de cloud computing?",
+    "options": [
+      "Microsoft Azure",
+      "Google Cloud Platform (GCP)",
+      "Amazon AWS"
+    ],
+    "answer": "Amazon AWS",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuáles son los componentes básicos de una nube híbrida?",
+    "options": [
+      "Nube privada o infraestructura propia, nube pública, interfaz de gestión centralizada y API de interconexión con las nubes",
+      "Nube privada o infraestructura propia, nube pública y API de interconexión con las nubes",
+      "Nube privada y nube pública"
+    ],
+    "answer": "Nube privada o infraestructura propia, nube pública, interfaz de gestión centralizada y API de interconexión con las nubes",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿En qué consiste el tipo de instalación pseudodistribuida?",
+    "options": [
+      "Está formada por un único servidor donde se encuentran los nodos esclavos, los maestros y el resto de las aplicaciones; solo procesa una tarea y se recomienda para crear pequeñas aplicaciones sin concurrencia",
+      "Está formada por más de un nodo, cada uno de los cuales tiene su rol y aprovecha el procesamiento en paralelo; es la recomendada para entornos de producción con una configuración hardware de alto nivel",
+      "Está formada por un único servidor, pero permite realizar múltiples tareas, aprovechando, por tanto, los núcleos del servidor de manera más eficiente"
+    ],
+    "answer": "Está formada por un único servidor, pero permite realizar múltiples tareas, aprovechando, por tanto, los núcleos del servidor de manera más eficiente",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿De qué se encarga la interoperabilidad organizativa?",
+    "options": [
+      "Se encarga de hacer compatible y entendible la información que se va intercambiando entre los diferentes componentes",
+      "Se encarga de la infraestructura de los sistemas, tanto hardware como software, donde se incluirán los servidores, el almacenamiento, las comunicaciones y las interfaces necesarios para interconectar los diferentes sistemas que deben interactuar",
+      "Su función es definir los objetivos de negocio, modelado de operaciones y procesos y fomentar la colaboración entre los diversos participantes"
+    ],
+    "answer": "Su función es definir los objetivos de negocio, modelado de operaciones y procesos y fomentar la colaboración entre los diversos participantes",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Por qué las organizaciones suelen elegir trabajar en cloud híbrido?",
+    "options": [
+      "La mayoría de organizaciones elige trabajar en cloud privado, ya que ello les permite mantener bajo su control toda la información sensible que tienen",
+      "Porque así tienen la opción de guardar en la nube privada información sensible que no debe permanecer fuera del control de la empresa, al tiempo que pueden utilizar una nube pública para volcar cargas de trabajo de entornos de desarrollo",
+      "Porque es una manera de reducir gastos, ya que no hacen uso de todos los recursos que ofrece tener cloud privado"
+    ],
+    "answer": "Porque así tienen la opción de guardar en la nube privada información sensible que no debe permanecer fuera del control de la empresa, al tiempo que pueden utilizar una nube pública para volcar cargas de trabajo de entornos de desarrollo",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es la solución más común que adoptan las empresas para poder gestionar de la manera más eficiente el problema que supone la rotación de personal para la gestión de identidades y accesos?",
+    "options": [
+      "Cuentan con una persona encargada exclusivamente de este trabajo: crear y eliminar claves; así, tiene cuidado de cambiarlas siempre a tiempo y hacer que no se repitan",
+      "La creación de un directorio en el que se crean y eliminan, y se activan y desactivan los usuarios",
+      "Crear una carta de confidencialidad y hacer que cada nuevo trabajador que entre a la empresa la firme"
+    ],
+    "answer": "La creación de un directorio en el que se crean y eliminan, y se activan y desactivan los usuarios",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué estrategias podemos poner en práctica a raíz de realizar el análisis DAFO, según la combinación de factores que hagamos?",
+    "options": [
+      "Ofensivas, defensivas y adaptativas",
+      "Ofensivas, defensivas, adaptativas y de supervivencia",
+      "Ofensivas y defensivas"
+    ],
+    "answer": "Ofensivas, defensivas, adaptativas y de supervivencia",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es el programa que ofrece GCP y que permite gestionar los usuarios que hacen uso de los servicios de cloud?",
+    "options": [
+      "DevOps",
+      "Key Vault",
+      "Cloud IAM"
+    ],
+    "answer": "Cloud IAM",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué tipo de amenaza se suele reducir utilizando el “cifrado doble” de Microsoft?",
+    "options": [
+      "Errores de configuración en el cifrado de datos",
+      "Errores en el servicio de almacenamiento S3",
+      "Implementación adecuada del algoritmo de cifrado"
+    ],
+    "answer": "Errores de configuración en el cifrado de datos",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué componentes tiene Hadoop según la ubicación donde se aloje el almacenamiento de la información?",
+    "options": [
+      "Hive y Hbase",
+      "MapReduce, HDFS y YARN",
+      "Display con MFA físico y aplicaciones MFA"
+    ],
+    "answer": "Hive y Hbase",
+    "subject": "HCL"
+  },
+  {
+    "question": "De las siguientes opciones, ¿cuál supone una amenaza cuando hemos decidido mover nuestra infraestructura a la nube?",
+    "options": [
+      "Desaparición del proveedor",
+      "Modelo de negocio joven",
+      "Necesidad de conocimiento limitado y de alto coste"
+    ],
+    "answer": "Desaparición del proveedor",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿En qué entorno se desarrolla la base del big data?",
+    "options": [
+      "En un servidor dedicado",
+      "En un proveedor externo que mantiene la nube en la que trabajamos y que se encarga de facilitar a los operadores de la empresa la interfaz o aplicación de aprovisionamiento",
+      "En el ecosistema Hadoop"
+    ],
+    "answer": "En el ecosistema Hadoop",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es el producto que más recomendado de los que hemos estudiado para dar nuestros primeros pasos en la nube privada?",
+    "options": [
+      "Las redes VPN",
+      "Los VPS o servidores privados virtuales",
+      "Opciones como OpenStack y OpenNebula"
+    ],
+    "answer": "Los VPS o servidores privados virtuales",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué significa “free tier” en el argot del cloud computing?",
+    "options": [
+      "Su significado es pago por uso; el cliente paga exclusivamente por lo que consume en recursos de cómputo",
+      "Significa que el proveedor tiene disponibles sus recursos para cualquier cliente a nivel mundial",
+      "Significa capa gratuita y es un servicio que los proveedores dan a sus usuarios sin coste siempre que mantengan un uso responsable y equilibrado del servicio"
+    ],
+    "answer": "Significa capa gratuita y es un servicio que los proveedores dan a sus usuarios sin coste siempre que mantengan un uso responsable y equilibrado del servicio",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué tipo de nube se suele utilizar a la hora de trabajar en big data?",
+    "options": [
+      "Cloud privado",
+      "Cloud público",
+      "Cloud híbrido"
+    ],
+    "answer": "Cloud híbrido",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuáles son las principales funciones del componente MapReduce?",
+    "options": [
+      "El almacenamiento de copias de seguridad",
+      "Almacenar conjuntos masivos de distintos tipos de datos: estructurados, semiestructurados y no estructurados",
+      "Es un motor de ejecución que se encarga de mapear y reducir, y ambos se ejecutan de manera distribuida"
+    ],
+    "answer": "Es un motor de ejecución que se encarga de mapear y reducir, y ambos se ejecutan de manera distribuida",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿En qué consiste la migración en frío?",
+    "options": [
+      "Es el tipo de migración que se hace entre distintos proveedores de manera directa",
+      "Es el tipo de migración que se hace de máquinas sin conexión",
+      "Es un tipo de migración dinámica, en bloque y en caliente"
+    ],
+    "answer": "Es el tipo de migración que se hace de máquinas sin conexión",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuáles son los componentes de Hadoop?",
+    "options": [
+      "MapReduce y YARN",
+      "MapReduce, HDFS y YARN",
+      "Llave de seguridad, display con MFA físico, aplicaciones MFA y MFA basada en texto SMS"
+    ],
+    "answer": "MapReduce, HDFS y YARN",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Sabrías identificar cuál de las siguientes opciones es un ejemplo de IaaS corporativo?",
+    "options": [
+      "Microsoft Azure",
+      "OpenStack",
+      "Google Cloud"
+    ],
+    "answer": "OpenStack",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Por qué la pérdida de acceso al cloud es una desventaja con la que cuenta esta opción de trabajo?",
+    "options": [
+      "Porque la empresa debe formar o contratar personal especializado en la creación y mantenimiento de una infraestructura cloud o bien contratar a una empresa externa que se encargue de ello, y ambas opciones son costosas",
+      "Porque supone la paralización de parte de la actividad de la empresa hasta que se restablezca el canal de comunicaciones, lo que puede traducirse en pérdidas económicas",
+      "Porque supone un gasto de propiedad, sea física o virtualizada, ya que necesita de una serie de recursos costosos, como la memoria RAM o procesadores"
+    ],
+    "answer": "Porque supone la paralización de parte de la actividad de la empresa hasta que se restablezca el canal de comunicaciones, lo que puede traducirse en pérdidas económicas",
+    "subject": "HCL"
+  },
+  {
+    "question": "De las siguientes opciones, ¿cuál es una característica del servicio que ofrece Amazon RDS en VMware?",
+    "options": [
+      "Parcialmente administrado",
+      "Escalabilidad y rendimiento",
+      "Poca durabilidad y desaprovechamiento de la infraestructura existente"
+    ],
+    "answer": "Escalabilidad y rendimiento",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuáles son las funciones principales del componente YARN?",
+    "options": [
+      "Es un motor de ejecución que se encarga de mapear y reducir, y ambos se ejecutan de manera distribuida",
+      "Se encarga de ejercer funciones de planificador de tareas, permite a Hadoop el uso de varios motores de ejecución y se encarga de diferenciar los procesos de gestión de recursos, así como los procesos de planificación y monitorización de tareas",
+      "Almacenar conjuntos masivos de diversos tipos de datos: estructurados, semiestructurados y no estructurados"
+    ],
+    "answer": "Se encarga de ejercer funciones de planificador de tareas, permite a Hadoop el uso de varios motores de ejecución y se encarga de diferenciar los procesos de gestión de recursos, así como los procesos de planificación y monitorización de tareas",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es la ventaja que tiene utilizar la solución VMware vCloud Director?",
+    "options": [
+      "La personalización, ya que permite ajustar y adaptar todos los parámetros necesarios según el nivel de exigencia de la empresa y mostrar un entorno amigable a los empleados, con la posibilidad de conservar la imagen corporativa de la empresa",
+      "No tiene un alto coste de adquisición de licencias, pues se realiza un pago mensual, que se cuantifica en función de la cantidad de recursos que el cliente prevé utilizar",
+      "La rapidez a la hora de ejecutar el servicio de identidad"
+    ],
+    "answer": "No tiene un alto coste de adquisición de licencias, pues se realiza un pago mensual, que se cuantifica en función de la cantidad de recursos que el cliente prevé utilizar",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué tipo de sistemas encontramos en los centros de datos?",
+    "options": [
+      "Sistemas de computación, comunicaciones, refrigeración, alimentación eléctrica y extinción de incendios",
+      "Sistemas de computación, comunicaciones, climatización, seguridad y extinción de incendios",
+      "Sistemas de computación, comunicaciones, climatización, alimentación eléctrica y extinción de incendios"
+    ],
+    "answer": "Sistemas de computación, comunicaciones, climatización, alimentación eléctrica y extinción de incendios",
+    "subject": "HCL"
+  },
+  {
+    "question": "Si trabajamos con OpenNebula, ¿qué complemento deberíamos deshabilitar para evitar bloqueos de seguridad?",
+    "options": [
+      "El componente SELinux",
+      "Las cookies",
+      "El servidor Apache"
+    ],
+    "answer": "El componente SELinux",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es el servicio más usado en el modelo cloud?",
+    "options": [
+      "El servicio de cómputo",
+      "El servicio de redes tradicionales",
+      "El servicio de bases de datos"
+    ],
+    "answer": "El servicio de cómputo",
+    "subject": "HCL"
+  },
+  {
+    "question": "De todas las operaciones que se realizan en un datacenter, ¿cuál es una de las primeras?",
+    "options": [
+      "Creación de un ecosistema virtualizado para optimizar el uso de recursos software",
+      "Creación de un ecosistema virtualizado para optimizar el uso de recursos hardware",
+      "Creación de una adecuada infraestructura de cableado de red"
+    ],
+    "answer": "Creación de un ecosistema virtualizado para optimizar el uso de recursos hardware",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿A qué nos referimos cuando hablamos de políticas de seguridad?",
+    "options": [
+      "Son derechos que se les otorgan a los usuarios para realizar acciones o para acceder a ubicaciones o dispositivos de la red",
+      "A las agrupaciones de permisos que se asignan a usuarios con el mismo perfil funcional dentro de la red",
+      "Al conjunto de reglas que engloban permisos, roles y derechos y que actúan normalmente de forma global sobre una unidad organizativa"
+    ],
+    "answer": "Al conjunto de reglas que engloban permisos, roles y derechos y que actúan normalmente de forma global sobre una unidad organizativa",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué son las API o interfaces de programación de aplicaciones?",
+    "options": [
+      "Son una serie de convenciones y protocolos que permiten la comunicación entre dos aplicaciones software permitiendo así una integración adecuada",
+      "Son una serie de convenciones y protocolos que dificultan la interacción entre distintos módulos de software",
+      "Son una serie de convenciones y protocolos que permiten la comunicación entre dos aplicaciones software, pero sin llegar a ocurrir una integración adecuada"
+    ],
+    "answer": "Son una serie de convenciones y protocolos que permiten la comunicación entre dos aplicaciones software permitiendo así una integración adecuada",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿En qué consiste la categoría Interna dentro del alojamiento on-premise?",
+    "options": [
+      "Consiste en que una empresa externa se encarga de administrar los servicios en la nube; así la empresa se limita a utilizar los servicios que ofrece su nube interna",
+      "Consiste en que la empresa se encarga de administrar los servicios en la nube mediante sus propios medios",
+      "Significa que la empresa se encarga de compartir su nube interna con otras empresas para así compartir el coste que supone esto"
+    ],
+    "answer": "Consiste en que la empresa se encarga de administrar los servicios en la nube mediante sus propios medios",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Por qué la confidencialidad se considera una ventaja de la nube privada?",
+    "options": [
+      "Porque es posible ajustar y adaptar todos los parámetros necesarios para cumplir las exigencias de la empresa, a nivel técnico y a nivel funcional",
+      "Porque gracias a esta característica, el personal puede gestionar la infraestructura según sus necesidades",
+      "Quizás sea la más valorada por las organizaciones, ya que, al no depender de un proveedor, toda la información considerada sensible o confidencial permanece bajo el control de la empresa, sin temor a una sustracción o a un caso de espionaje"
+    ],
+    "answer": "Quizás sea la más valorada por las organizaciones, ya que, al no depender de un proveedor, toda la información considerada sensible o confidencial permanece bajo el control de la empresa, sin temor a una sustracción o a un caso de espionaje",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Qué función tiene Ambari dentro del ecosistema Hadoop?",
+    "options": [
+      "Procesa información de eventos en tiempo real de manera distribuida",
+      "Se encarga de alimentarse de datos de fuentes externas y volcarlos en HDFS",
+      "Gracias a su interfaz web puede monitorizar e interactuar con todos los componentes del ecosistema; además, visualiza el estado de los servicios de forma centralizada"
+    ],
+    "answer": "Gracias a su interfaz web puede monitorizar e interactuar con todos los componentes del ecosistema; además, visualiza el estado de los servicios de forma centralizada",
+    "subject": "HCL"
+  },
+  {
+    "question": "Actualmente, ¿las nubes públicas ofrecen algún tipo de servicio de red?",
+    "options": [
+      "Sí, y muy variados, desde un firewall que proteja nuestra instancia hasta complejos entramados de redes virtuales privadas, aplicativos de seguridad perimetral o conectores que permiten el acceso a internet",
+      "Sí, pero tan solo aquellos relacionados con firewalls que protejan nuestras instancias",
+      "No, es un servicio que tan solo ofrecen las nubes privadas"
+    ],
+    "answer": "Sí, y muy variados, desde un firewall que proteja nuestra instancia hasta complejos entramados de redes virtuales privadas, aplicativos de seguridad perimetral o conectores que permiten el acceso a internet",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuáles son las fases de migración a la nube privada?",
+    "options": [
+      "Son cuatro: recopilación de información, análisis de los sistemas, recogida de feedback de usuarios clave y creación de planificación",
+      "Son cuatro: recopilación de información, análisis de los sistemas, creación en entorno de pruebas y creación de planificación",
+      "Son cinco: recopilación de información, análisis de los sistemas, creación en entorno de pruebas, recogida de feedback de usuarios clave y creación de planificación"
+    ],
+    "answer": "Son cinco: recopilación de información, análisis de los sistemas, creación en entorno de pruebas, recogida de feedback de usuarios clave y creación de planificación",
+    "subject": "HCL"
+  },
+  {
+    "question": "¿Cuál es la función del servicio de catálogo dentro de Impala?",
+    "options": [
+      "Leer y escribir archivos",
+      "Se da el proceso de catalogd, por el que se controlan y gestionan los cambios que producen las consultas SQL en los nodos de los clusters",
+      "Controlar y gestionar la disponibilidad de los demonios de Impala"
+    ],
+    "answer": "Se da el proceso de catalogd, por el que se controlan y gestionan los cambios que producen las consultas SQL en los nodos de los clusters",
+    "subject": "HCL"
+  },
+  {
+    "question": "Desde el punto de vista de un administrador de la nube, ¿cuál es el punto que requiere más atención en su interacción con ella?",
+    "options": [
+      "La gestión de claves, dada su naturaleza relacionada con la seguridad",
+      "El método de encriptación de datos",
+      "Cómo realizar la virtualización de los datos"
+    ],
+    "answer": "La gestión de claves, dada su naturaleza relacionada con la seguridad",
+    "subject": "HCL"
+  }
+]
