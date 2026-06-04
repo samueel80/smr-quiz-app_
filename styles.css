@@ -56,6 +56,47 @@ body {
     position: relative;
 }
 
+/* Glowing background orbs */
+.glowing-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.12;
+    z-index: 1;
+    pointer-events: none;
+    animation: floatOrb 25s infinite alternate ease-in-out;
+}
+.orb-1 {
+    width: 350px;
+    height: 350px;
+    background: var(--primary);
+    top: -5%;
+    left: -10%;
+    animation-duration: 20s;
+}
+.orb-2 {
+    width: 450px;
+    height: 450px;
+    background: #4f46e5;
+    bottom: -10%;
+    right: -10%;
+    animation-duration: 28s;
+}
+.orb-3 {
+    width: 300px;
+    height: 300px;
+    background: var(--success);
+    top: 45%;
+    left: 45%;
+    transform: translate(-50%, -50%);
+    animation-duration: 22s;
+}
+@keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, -60px) scale(1.15); }
+    100% { transform: translate(-30px, 40px) scale(0.9); }
+}
+
 /* Confetti canvas */
 #confettiCanvas {
     position: fixed;
