@@ -564,6 +564,74 @@ function shuffleArray(arr) {
 }
 
 // LOAD & SAVE
+function preloadDefaultQuestions() {
+    // Intentamos cargar el archivo preguntas.json con las 1151 preguntas si existe, si no, cargamos el por defecto de HLC
+    fetch('preguntas.json')
+        .then(response => {
+            if (!response.ok) {
+                return fetch('preguntas_HCL_1780578960016.json');
+            }
+            return response;
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('No se pudo descargar ningún archivo de preguntas.');
+            }
+            return response.json();
+        })
+        .then(arr => {
+            if (Array.isArray(arr) || (arr && arr.questions)) {
+                let loadedCount = 0;
+                // Si viene de un backup exportado, puede ser un objeto con estructura {questions: [...]} o un array simple
+                const questionsArray = Array.isArray(arr) ? arr : (arr.questions || []);
+                
+                questionsArray.forEach(q => {
+                    if (q.question && Array.isArray(q.options) && q.answer !== undefined) {
+                        let finalSubject = q.subject || "Sin clasificar";
+                        finalSubject = finalSubject
+                            .replace(/_\d+/g, '')
+                            .replace(/\s+\d+/g, '')
+                            .replace(/\d+/g, '')
+                            .replace(/_/g, ' ')
+                            .trim();
+                        
+                        finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
+                        
+                        if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
+                            finalSubject = "HLC (Horas de Libre Configuración)";
+                        }
+
+                        // Evitar duplicados durante la precarga
+                        const normText = normalizeString(q.question);
+                        const exists = db.questions.some(item => normalizeString(item.question) === normText);
+
+                        if (!exists) {
+                            db.questions.push({
+                                question: q.question,
+                                options: q.options,
+                                answer: q.answer,
+                                subject: finalSubject,
+                                source: q.source || "oficial"
+                            });
+                            loadedCount++;
+                        }
+                    }
+                });
+                db.indexPreloaded = true;
+                saveDatabase();
+                console.log(`Pre-cargadas ${loadedCount} preguntas.`);
+            } else {
+                db.indexPreloaded = true;
+                saveDatabase();
+            }
+            updateDashboardUI();
+        })
+        .catch(err => {
+            console.error('Error pre-cargando preguntas:', err);
+            updateDashboardUI();
+        });
+}
+
 function loadDatabase() {
     const saved = localStorage.getItem('smr_questions_db_pro');
     if (saved) {
@@ -577,6 +645,7 @@ function loadDatabase() {
             if (db.streak === undefined) db.streak = 0;
             if (db.lastStudyDate === undefined) db.lastStudyDate = null;
             if (db.questionStats === undefined) db.questionStats = {};
+            if (db.indexPreloaded === undefined) db.indexPreloaded = false;
 
             // Clean subject names automatically
             let hasChanges = false;
@@ -613,7 +682,12 @@ function loadDatabase() {
             console.error("DB Load failed", e);
         }
     }
-    updateDashboardUI();
+
+    if (!db.indexPreloaded) {
+        preloadDefaultQuestions();
+    } else {
+        updateDashboardUI();
+    }
 }
 
 function saveDatabase() {
