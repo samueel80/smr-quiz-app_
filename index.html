@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -22,16 +23,17 @@
         <!-- HEADER -->
         <header class="app-header">
             <div class="logo-area">
-                <span class="logo-icon">🚀</span>
+                <span class="material-symbols-outlined logo-icon" style="font-size: 28px; color: var(--primary); margin-right: 8px;">rocket_launch</span>
                 <h1>SMR <span class="accent-text">Test Prep Pro</span></h1>
             </div>
             <div class="header-controls">
                 <div class="streak-badge" id="streakBadge" title="Racha de estudio diaria (¡Estudia todos los días!)">
-                    🔥 <span id="streakCount">0</span> días
+                    <span class="material-symbols-outlined" style="font-size: 16px; color: #f87171; margin-right: 4px; display: inline-flex;">local_fire_department</span> <span id="streakCount">0</span> días
                 </div>
-                <button id="studyGuideBtn" class="btn secondary-btn study-nav-btn">📖 Guía de Estudio</button>
+                <button id="studyGuideBtn" class="btn secondary-btn study-nav-btn" style="padding: 10px 18px; font-size: 13px;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px; display: inline-flex;">menu_book</span> Guía de Estudio</button>
+                <button id="millionaireGameBtn" class="btn success-btn study-nav-btn" style="padding: 10px 18px; font-size: 13px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); border: none; color: white;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px; display: inline-flex;">payments</span> Modo Millonario</button>
                 <button id="soundToggleBtn" class="control-btn" title="Activar/Desactivar Sonido">
-                    <span id="soundIcon">🔊</span>
+                    <span id="soundIcon" class="material-symbols-outlined" style="font-size: 18px; display: inline-flex;">volume_up</span>
                 </button>
                 <div class="stats-badge">
                     <span id="totalQuestionsCount">0</span> Preguntas
@@ -44,32 +46,32 @@
             <section id="dashboardScreen" class="screen active">
                 <!-- PANEL DE ESTADÍSTICAS -->
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon-wrapper blue">📚</div>
+                    <div class="stat-card" id="widgetSubjects" style="cursor: pointer;" title="Ir a Selección de Asignaturas">
+                        <div class="stat-icon-wrapper blue"><span class="material-symbols-outlined">school</span></div>
                         <div class="stat-info">
                             <span class="stat-label">Asignaturas</span>
                             <span class="stat-value" id="subjectsCount">0</span>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon-wrapper yellow">⭐</div>
+                    <div class="stat-card" id="widgetStarred" style="cursor: pointer;" title="Ver mis Favoritas">
+                        <div class="stat-icon-wrapper yellow"><span class="material-symbols-outlined">star</span></div>
                         <div class="stat-info">
                             <span class="stat-label">Favoritos</span>
                             <span class="stat-value" id="starredCount">0</span>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon-wrapper green">📈</div>
+                    <div class="stat-card" id="widgetScore" style="cursor: pointer;" title="Ver Historial de Intentos">
+                        <div class="stat-icon-wrapper green"><span class="material-symbols-outlined">trending_up</span></div>
                         <div class="stat-info">
                             <span class="stat-label">Acierto Medio</span>
                             <span class="stat-value" id="avgScore">0%</span>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon-wrapper purple">🏆</div>
+                    <div class="stat-card" id="widgetAchievements" style="cursor: pointer;" title="Ir a Tus Logros Académicos">
+                        <div class="stat-icon-wrapper purple"><span class="material-symbols-outlined">trophy</span></div>
                         <div class="stat-info">
                             <span class="stat-label">Logros</span>
-                            <span class="stat-value" id="achievementsCount">0/6</span>
+                            <span class="stat-value" id="achievementsCount">0/8</span>
                         </div>
                     </div>
                 </div>
@@ -80,6 +82,11 @@
                         <div class="panel-header">
                             <h3><span class="step-num">1</span> Selecciona Asignaturas</h3>
                             <span class="panel-subtitle">Haz clic para marcar. Se muestra tu nivel de dominio 📊</span>
+                        </div>
+                        
+                        <div class="info-alert-banner" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fecf3e; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; line-height: 1.35; margin-bottom: 12px; display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="font-size: 1rem;">⚠️</span>
+                            <span><strong>Nota del grupo:</strong> La asignatura <strong>Empleabilidad I</strong> es de primer curso. Solo está activada para mí/quienes tengamos que recuperarla del año anterior. Si no es tu caso, no necesitas seleccionarla.</span>
                         </div>
                         
                         <div id="subjectsGrid" class="subjects-grid">
@@ -113,15 +120,15 @@
                             <label>Modo de Test:</label>
                             <div class="mode-chips" id="modeChips">
                                 <button class="chip-btn active" data-value="practice">
-                                    <span class="chip-icon">🎯</span>
+                                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 4px;">track_changes</span>
                                     <span class="chip-text">Práctica</span>
                                 </button>
                                 <button class="chip-btn" data-value="exam">
-                                    <span class="chip-icon">⏱️</span>
+                                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 4px;">timer</span>
                                     <span class="chip-text">Examen</span>
                                 </button>
                                 <button class="chip-btn" data-value="smart" title="Prioriza preguntas falladas o no respondidas">
-                                    <span class="chip-icon">🧠</span>
+                                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 4px;">psychology</span>
                                     <span class="chip-text">Inteligente</span>
                                 </button>
                             </div>
@@ -153,10 +160,10 @@
                         <!-- Iniciar / Desafío Rápido -->
                         <div class="start-actions-row">
                             <button id="startTestBtn" class="btn primary-btn start-btn" disabled>
-                                ¡Iniciar Cuestionario! 🚀
+                                ¡Iniciar Cuestionario! <span class="material-symbols-outlined" style="font-size: 20px; margin-left: 6px;">rocket_launch</span>
                             </button>
                             <button id="quickChallengeBtn" class="btn secondary-btn challenge-btn" title="Examen rápido de 10 preguntas aleatorias de todas las asignaturas">
-                                Desafío Rápido ⚡
+                                Desafío Rápido <span class="material-symbols-outlined" style="font-size: 20px; margin-left: 6px;">bolt</span>
                             </button>
                         </div>
                     </div>
@@ -167,14 +174,14 @@
                     <div class="panel-card drop-zone-card">
                         <h3><span class="step-num">3</span> Copias e Importación</h3>
                         <div id="dropZone" class="drop-zone">
-                            <span class="upload-icon">📥</span>
+                            <span class="material-symbols-outlined" style="font-size: 36px; color: var(--primary); margin-bottom: 8px;">download</span>
                             <p>Arrastra archivos <strong>.json</strong> aquí o haz clic para buscarlos</p>
                             <input type="file" id="fileInput" accept=".json" multiple style="display: none;">
                         </div>
                         
                         <div class="backup-actions">
-                            <button id="exportBackupBtn" class="btn secondary-btn text-btn">📤 Guardar Progreso (Copia)</button>
-                            <button id="importBackupBtn" class="btn secondary-btn text-btn">📥 Restaurar Progreso</button>
+                            <button id="exportBackupBtn" class="btn secondary-btn text-btn"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px;">upload</span> Guardar Progreso (Copia)</button>
+                            <button id="importBackupBtn" class="btn secondary-btn text-btn"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px;">download</span> Restaurar Progreso</button>
                             <input type="file" id="backupFileInput" accept=".json" style="display: none;">
                         </div>
                         
@@ -205,10 +212,10 @@
                         <span id="currentQuestionNum" class="question-counter">Pregunta 1 de 10</span>
                         <div class="test-indicators">
                             <span id="questionSourceTag" class="source-badge">Oficial</span>
-                            <button id="bookmarkActiveBtn" class="star-btn" title="Añadir a favoritos">⭐</button>
-                            <button id="speakActiveBtn" class="star-btn speak-btn" title="Escuchar pregunta en voz alta">🔊</button>
+                            <button id="bookmarkActiveBtn" class="star-btn" title="Añadir a favoritos"><span class="material-symbols-outlined" style="font-size: 18px;">star</span></button>
+                            <button id="speakActiveBtn" class="star-btn speak-btn" title="Escuchar pregunta en voz alta"><span class="material-symbols-outlined" style="font-size: 18px;">volume_up</span></button>
                             <span id="testTimer" class="timer-badge">00:00</span>
-                            <button id="exitTestBtn" class="exit-btn" title="Salir del cuestionario" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: 6px; display: inline-flex; align-items: center;">✕ Salir</button>
+                            <button id="exitTestBtn" class="exit-btn" title="Salir del cuestionario" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: 6px; display: inline-flex; align-items: center;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">close</span> Salir</button>
                         </div>
                     </div>
                     <div class="progress-bar-container">
@@ -226,16 +233,24 @@
                 </div>
 
                 <div id="explanationBox" class="explanation-box" style="display: none;">
-                    <span class="exp-icon">💡</span>
+                    <span class="material-symbols-outlined" style="font-size: 20px; color: var(--primary); margin-right: 8px;">lightbulb</span>
                     <div class="exp-content">
                         <strong>Respuesta Correcta:</strong> <span id="explanationText"></span>
                     </div>
                 </div>
 
+                <div id="hintBox" class="explanation-box" style="display: none; background: rgba(234, 179, 8, 0.08); border-color: rgba(234, 179, 8, 0.25); margin-top: 12px;">
+                    <span class="material-symbols-outlined" style="font-size: 20px; color: var(--warning); margin-right: 8px;">help</span>
+                    <div class="exp-content">
+                        <strong>Pista:</strong> <span id="hintText"></span>
+                    </div>
+                </div>
+
                 <div class="test-navigation">
-                    <button id="prevBtn" class="btn secondary-btn">◀ Anterior</button>
-                    <button id="nextBtn" class="btn primary-btn">Siguiente ▶</button>
-                    <button id="finishBtn" class="btn success-btn" style="display: none;">Enviar Respuestas 🏁</button>
+                    <button id="prevBtn" class="btn secondary-btn" style="padding: 10px 18px; font-size: 14px;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">arrow_back</span> Anterior</button>
+                    <button id="showHintBtn" class="btn secondary-btn" style="padding: 10px 18px; font-size: 14px; color: #fecf3e; border-color: rgba(254, 207, 62, 0.35); display: none;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">lightbulb</span> Pista</button>
+                    <button id="nextBtn" class="btn primary-btn" style="padding: 10px 18px; font-size: 14px;">Siguiente <span class="material-symbols-outlined" style="font-size: 18px; margin-left: 6px;">arrow_forward</span></button>
+                    <button id="finishBtn" class="btn success-btn" style="display: none; padding: 10px 18px; font-size: 14px;">Enviar Respuestas <span class="material-symbols-outlined" style="font-size: 18px; margin-left: 6px;">sports_score</span></button>
                 </div>
             </section>
 
@@ -293,8 +308,8 @@
             <section id="studyScreen" class="screen">
                 <div class="study-header-panel">
                     <div class="study-title-row">
-                        <button id="backToDashboardBtn" class="btn secondary-btn">◀ Volver</button>
-                        <h2>📖 Guía de Estudio Completa</h2>
+                        <button id="backToDashboardBtn" class="btn secondary-btn" style="padding: 8px 16px; font-size: 13px;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">arrow_back</span> Volver</button>
+                        <h2>Guía de Estudio Completa</h2>
                     </div>
                     <p>Revisa libremente todo el temario de preguntas y respuestas filtrado por asignaturas.</p>
                     
@@ -311,8 +326,8 @@
                         </div>
                     </div>
                     <div class="study-actions-row" style="margin-top: 15px; display: flex; gap: 10px;">
-                        <button id="studyExpandAllBtn" class="btn secondary-btn text-btn" style="padding: 6px 12px; font-size: 0.85rem;">👁️ Mostrar todas las respuestas</button>
-                        <button id="studyCollapseAllBtn" class="btn secondary-btn text-btn" style="padding: 6px 12px; font-size: 0.85rem;">🙈 Ocultar todas las respuestas</button>
+                        <button id="studyExpandAllBtn" class="btn secondary-btn text-btn" style="padding: 8px 14px; font-size: 0.8rem; display: inline-flex; align-items: center;"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px;">visibility</span> Mostrar todas las respuestas</button>
+                        <button id="studyCollapseAllBtn" class="btn secondary-btn text-btn" style="padding: 8px 14px; font-size: 0.8rem; display: inline-flex; align-items: center;"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px;">visibility_off</span> Ocultar todas las respuestas</button>
                     </div>
                 </div>
 
@@ -347,7 +362,112 @@
                     </div>
                 </div>
             </section>
+
+            <!-- PANTALLA 5: QUIEN QUIERE SER MILLONARIO -->
+            <section id="millionaireScreen" class="screen">
+                <!-- INTRO PRESENTATION -->
+                <div id="millionaireIntro" class="panel-card" style="margin-bottom: 24px; text-align: center; padding: 40px 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;">
+                    <div style="background: rgba(251, 191, 36, 0.1); border: 2px solid #fbbf24; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); flex-shrink: 0;">
+                        <span class="material-symbols-outlined" style="font-size: 48px; color: #fbbf24; animation: pulse-gold 2s infinite alternate;">workspace_premium</span>
+                    </div>
+                    <h2 style="font-size: 2.2rem; font-weight: 900; margin: 10px 0 0 0; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2;">¿Quién Quiere Ser Millonario?</h2>
+                    <p style="font-size: 1.1rem; color: var(--text-color); max-width: 600px; line-height: 1.6; margin: 0;">
+                        Bienvenido al simulador definitivo de SMR. Pon a prueba tu preparación respondiendo 15 preguntas con dificultad creciente. ¡El millón virtual está en juego!
+                    </p>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 20px; text-align: left; max-width: 550px; width: 100%; display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem;">
+                        <h4 style="color: #fbbf24; margin: 0; font-family: var(--font-heading); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 18px;">rule</span> Reglas del Desafío:</h4>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--primary); font-weight: bold;">1.</span> <span>Responde 15 preguntas de forma correcta de manera consecutiva para ganar.</span></div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--primary); font-weight: bold;">2.</span> <span>Cuentas con <strong>3 comodines</strong> de un solo uso: 50:50, Votación del público y Llamada a un amigo.</span></div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--primary); font-weight: bold;">3.</span> <span>Niveles de seguridad a los <strong>1.000 €</strong> y <strong>32.000 €</strong>. Si fallas, te llevas el último premio asegurado.</span></div>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;"><span style="color: var(--primary); font-weight: bold;">4.</span> <span>Puedes retirarte en cualquier momento antes de responder y quedarte con lo acumulado.</span></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 14px; width: 100%; max-width: 550px; margin-top: 10px;">
+                        <button id="millionaireIntroBackBtn" class="btn secondary-btn" style="flex: 1; padding: 12px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">arrow_back</span> Volver</button>
+                        <button id="millionaireIntroStartBtn" class="btn success-btn" style="flex: 2; padding: 12px; font-weight: 700; font-size: 0.95rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">play_circle</span> Entrar al Cuestionario</button>
+                    </div>
+                </div>
+
+                <!-- SETUP GAME -->
+                <div id="millionaireSetup" class="panel-card" style="margin-bottom: 24px; display: none;">
+                    <div class="study-title-row" style="display: flex; align-items: center; justify-content: space-between;">
+                        <button id="millionaireBackBtn" class="btn secondary-btn" style="padding: 8px 16px; font-size: 13px;"><span class="material-symbols-outlined" style="font-size: 18px; margin-right: 6px;">arrow_back</span> Volver</button>
+                        <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="color: #fecf3e; font-size: 28px;">workspace_premium</span> Simulador del Millonario</h2>
+                    </div>
+                    <p style="margin-top: 10px; color: var(--text-muted);">Demuestra tus conocimientos en SMR. Responde 15 preguntas consecutivas correctas para ganar el millón virtual. Tienes 3 comodines a tu disposición.</p>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px; font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-glow);">Selecciona asignaturas para tu juego personalizado:</h4>
+                        <div id="millionaireSubjectsGrid" class="subjects-grid">
+                            <!-- Rellenado dinámicamente -->
+                        </div>
+                        <div class="subject-actions" style="margin-top: 10px;">
+                            <button id="millSelectAllBtn" class="text-btn">Seleccionar todas</button>
+                            <button id="millDeselectAllBtn" class="text-btn">Deseleccionar todas</button>
+                        </div>
+                    </div>
+                    
+                    <button id="startMillionaireGameBtn" class="btn primary-btn" style="margin-top: 24px; width: 100%;"><span class="material-symbols-outlined" style="margin-right: 6px;">play_circle</span> Comenzar Desafío del Millonario</button>
+                </div>
+
+                <!-- GAME ACTIVE -->
+                <div id="millionaireGame" style="display: none;" class="dashboard-layout">
+                    <!-- Column izquierda: Pregunta y comodines -->
+                    <div class="panel-card" style="flex: 2;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <span style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: #fbbf24;" id="millCurrentLevelLabel">Nivel 1 - 100 €</span>
+                            <button id="exitMillionaireBtn" class="exit-btn" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">close</span> Retirarse y Salir</button>
+                        </div>
+
+                        <!-- Comodines -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 20px;" id="millLifelinesRow">
+                            <button id="millLifeline50" class="btn secondary-btn" style="flex: 1; padding: 10px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="margin-right: 4px; font-size: 16px;">percent</span> 50:50</button>
+                            <button id="millLifelineAudience" class="btn secondary-btn" style="flex: 1; padding: 10px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="margin-right: 4px; font-size: 16px;">bar_chart</span> Público</button>
+                            <button id="millLifelinePhone" class="btn secondary-btn" style="flex: 1; padding: 10px; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="margin-right: 4px; font-size: 16px;">phone_in_talk</span> Llamada</button>
+                        </div>
+
+                        <!-- Panel de visualización de comodines (Llamada/Público) -->
+                        <div id="millLifelineFeedbackBox" class="explanation-box" style="display: none; background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25); margin-bottom: 20px;">
+                            <span class="material-symbols-outlined" style="font-size: 20px; color: var(--primary); margin-right: 8px;" id="millFeedbackIcon">help</span>
+                            <div class="exp-content" id="millFeedbackContent">
+                                <!-- Contenido dinámico -->
+                            </div>
+                        </div>
+
+                        <!-- Pregunta -->
+                        <div class="question-container" style="margin: 0 0 20px 0;">
+                            <div class="question-subject-tag" id="millQuestionSubjectTag" style="margin-bottom: 8px;">Asignatura</div>
+                            <h2 id="millQuestionText" style="font-size: 1.25rem;">Pregunta</h2>
+                            <div id="millOptionsContainer" class="options-container" style="margin-top: 20px;">
+                                <!-- Opciones cargadas dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column derecha: Escalera de premios -->
+                    <div class="panel-card" style="flex: 1; gap: 6px; display: flex; flex-direction: column;" id="millPrizeLadderPanel">
+                        <!-- Generada dinámicamente -->
+                    </div>
+                </div>
         </main>
+    </div>
+
+    <!-- CUSTOM MODAL CONTAINER -->
+    <div id="customModal" class="custom-modal-overlay" style="display: none;">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <span class="material-symbols-outlined modal-icon" id="customModalIcon" style="color: #fbbf24; font-size: 28px;">info</span>
+                <h3 id="customModalTitle" style="margin: 0; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: white;">Confirmación</h3>
+            </div>
+            <div class="custom-modal-body">
+                <p id="customModalMessage" style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;"></p>
+            </div>
+            <div class="custom-modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+                <button id="customModalCancelBtn" class="btn secondary-btn" style="padding: 8px 16px; font-size: 13px;">Cancelar</button>
+                <button id="customModalConfirmBtn" class="btn primary-btn" style="padding: 8px 16px; font-size: 13px;">Aceptar</button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

@@ -1288,13 +1288,16 @@ let session = {
 
 // Achievements definition
 const ACHIEVEMENTS = [
-    { id: 'first_test', title: 'Primer Paso 👣', desc: 'Completa tu primer cuestionario.', condition: () => db.history.length >= 1 },
-    { id: 'perfect_score', title: 'Examen Perfecto 💯', desc: 'Consigue un 100% de aciertos.', condition: () => db.history.some(h => h.percent === 100) },
-    { id: 'streak_3', title: 'Constancia 🔥', desc: 'Alcanza una racha de 3 días de estudio.', condition: () => db.streak >= 3 },
-    { id: 'streak_7', title: 'Hábito de Hierro 🛡️', desc: 'Alcanza una racha de 7 días de estudio.', condition: () => db.streak >= 7 },
-    { id: 'starred_10', title: 'Coleccionista ⭐', desc: 'Guarda 10 o más preguntas favoritas.', condition: () => db.starred.length >= 10 },
-    { id: 'repaso_master', title: 'Mente Curiosa 🧠', desc: 'Completa un test de solo repaso.', condition: () => db.history.some(h => h.mode !== 'smart' && h.subjects.includes("Repaso") || h.subjects === "Inglés" || h.subjects === "Digitalización") }
+    { id: 'first_test', title: 'Primer Paso', desc: 'Completa tu primer cuestionario.', condition: () => db.history.length >= 1 },
+    { id: 'perfect_score', title: 'Examen Perfecto', desc: 'Consigue un 100% de aciertos.', condition: () => db.history.some(h => h.percent === 100) },
+    { id: 'streak_3', title: 'Constancia', desc: 'Alcanza una racha de 3 días de estudio.', condition: () => db.streak >= 3 },
+    { id: 'streak_7', title: 'Hábito de Hierro', desc: 'Alcanza una racha de 7 días de estudio.', condition: () => db.streak >= 7 },
+    { id: 'starred_10', title: 'Coleccionista', desc: 'Guarda 10 o más preguntas favoritas.', condition: () => db.starred.length >= 10 },
+    { id: 'repaso_master', title: 'Mente Curiosa', desc: 'Completa un test de solo repaso.', condition: () => db.history.some(h => h.mode !== 'smart' && h.subjects.includes("Repaso") || h.subjects === "Inglés" || h.subjects === "Digitalización") },
+    { id: 'millionaire_play', title: 'Concursante', desc: 'Juega una partida de Quién Quiere Ser Millonario.', condition: () => (db.millionairePlayed || 0) > 0 },
+    { id: 'millionaire_win', title: 'Mente Millonaria', desc: 'Gana el premio máximo de 1.000.000 €.', condition: () => (db.millionaireWins || 0) > 0 }
 ];
+
 
 // Helper: Merges user DB questions with hardcoded seed review questions
 let cachedAllQuestions = null;
@@ -1345,6 +1348,26 @@ function playSound(type) {
                 g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.1 + 0.3);
                 o.start(audioCtx.currentTime + idx * 0.1);
                 o.stop(audioCtx.currentTime + idx * 0.1 + 0.3);
+            });
+        } else if (type === 'tick') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'intro') {
+            const introNotes = [220, 277.18, 329.63, 440, 554.37, 659.25, 880];
+            introNotes.forEach((freq, idx) => {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.08);
+                g.gain.setValueAtTime(0.08, audioCtx.currentTime + idx * 0.08);
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.4);
+                o.start(audioCtx.currentTime + idx * 0.08);
+                o.stop(audioCtx.currentTime + idx * 0.08 + 0.4);
             });
         }
     } catch (e) {
@@ -1433,6 +1456,40 @@ function stopSpeaking() {
     }
 }
 
+// Hint Generator
+function generateHint(q) {
+    const ans = q.answer;
+    if (!ans) return "No hay pista disponible.";
+    
+    const words = ans.split(" ");
+    const revealedWords = words.map(word => {
+        // Clean word length check (only counting alphanumeric characters)
+        const alphaClean = word.replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ]/g, '');
+        if (alphaClean.length <= 3) {
+            return word; // Show short words fully
+        }
+        
+        let letterCount = 0;
+        let result = "";
+        for (let i = 0; i < word.length; i++) {
+            const char = word[i];
+            if (/[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ]/.test(char)) {
+                if (letterCount < 3) {
+                    result += char;
+                } else {
+                    result += "_";
+                }
+                letterCount++;
+            } else {
+                result += char; // Preserve brackets, punctuation, symbols
+            }
+        }
+        return result;
+    });
+    
+    return `Pista (casi directa): "${revealedWords.join(" ")}"`;
+}
+
 // Elements
 const dashboardScreen = document.getElementById('dashboardScreen');
 const testScreen = document.getElementById('testScreen');
@@ -1512,6 +1569,32 @@ const speakActiveBtn = document.getElementById('speakActiveBtn');
 const studyExpandAllBtn = document.getElementById('studyExpandAllBtn');
 const studyCollapseAllBtn = document.getElementById('studyCollapseAllBtn');
 const exitTestBtn = document.getElementById('exitTestBtn');
+const showHintBtn = document.getElementById('showHintBtn');
+const hintBox = document.getElementById('hintBox');
+const hintText = document.getElementById('hintText');
+
+// Millionaire Elements
+const millionaireGameBtn = document.getElementById('millionaireGameBtn');
+const millionaireScreen = document.getElementById('millionaireScreen');
+const millionaireSetup = document.getElementById('millionaireSetup');
+const millionaireGame = document.getElementById('millionaireGame');
+const millionaireBackBtn = document.getElementById('millionaireBackBtn');
+const millionaireSubjectsGrid = document.getElementById('millionaireSubjectsGrid');
+const millSelectAllBtn = document.getElementById('millSelectAllBtn');
+const millDeselectAllBtn = document.getElementById('millDeselectAllBtn');
+const startMillionaireGameBtn = document.getElementById('startMillionaireGameBtn');
+const exitMillionaireBtn = document.getElementById('exitMillionaireBtn');
+const millCurrentLevelLabel = document.getElementById('millCurrentLevelLabel');
+const millLifeline50 = document.getElementById('millLifeline50');
+const millLifelineAudience = document.getElementById('millLifelineAudience');
+const millLifelinePhone = document.getElementById('millLifelinePhone');
+const millLifelineFeedbackBox = document.getElementById('millLifelineFeedbackBox');
+const millFeedbackIcon = document.getElementById('millFeedbackIcon');
+const millFeedbackContent = document.getElementById('millFeedbackContent');
+const millQuestionSubjectTag = document.getElementById('millQuestionSubjectTag');
+const millQuestionText = document.getElementById('millQuestionText');
+const millOptionsContainer = document.getElementById('millOptionsContainer');
+const millPrizeLadderPanel = document.getElementById('millPrizeLadderPanel');
 
 // SHUFFLE HELPER
 function shuffleArray(arr) {
@@ -1613,6 +1696,18 @@ function loadDatabase() {
             if (db.lastStudyDate === undefined) db.lastStudyDate = null;
             if (db.questionStats === undefined) db.questionStats = {};
             if (db.indexPreloaded === undefined) db.indexPreloaded = false;
+            if (db.millionaireWins === undefined) db.millionaireWins = 0;
+            if (db.millionairePlayed === undefined) db.millionairePlayed = 0;
+            if (!Array.isArray(db.unlockedAchievements)) {
+                db.unlockedAchievements = [];
+                // Quietly pre-populate achievements based on current database stats
+                ACHIEVEMENTS.forEach(ach => {
+                    if (ach.condition()) {
+                        db.unlockedAchievements.push(ach.id);
+                    }
+                });
+            }
+
 
             // Clean subject names automatically
             let hasChanges = false;
@@ -1693,12 +1788,153 @@ function getYesterdayDateString() {
     return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
 }
 
+// Custom Alerts and Confirms
+function showCustomAlert(title, message, icon = 'info') {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('customModal');
+        const iconEl = document.getElementById('customModalIcon');
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const confirmBtn = document.getElementById('customModalConfirmBtn');
+
+        iconEl.textContent = icon;
+        titleEl.textContent = title;
+        msgEl.innerHTML = message;
+        cancelBtn.style.display = 'none';
+        confirmBtn.textContent = 'Aceptar';
+
+        overlay.style.display = 'flex';
+
+        const handleConfirm = () => {
+            overlay.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            resolve(true);
+        };
+        confirmBtn.addEventListener('click', handleConfirm);
+    });
+}
+
+function showCustomConfirm(title, message, icon = 'help') {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('customModal');
+        const iconEl = document.getElementById('customModalIcon');
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const confirmBtn = document.getElementById('customModalConfirmBtn');
+
+        iconEl.textContent = icon;
+        titleEl.textContent = title;
+        msgEl.innerHTML = message;
+        cancelBtn.style.display = 'block';
+        cancelBtn.textContent = 'Cancelar';
+        confirmBtn.textContent = 'Aceptar';
+
+        overlay.style.display = 'flex';
+
+        const handleConfirm = () => {
+            overlay.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(true);
+        };
+        const handleCancel = () => {
+            overlay.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(false);
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+// Toast Notifications
+function showToast(title, desc, iconName = 'notifications', type = 'info') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}-toast`;
+    
+    let iconColor = 'var(--primary)';
+    if (type === 'achievement') iconColor = '#fbbf24';
+    if (type === 'streak') iconColor = '#f87171';
+
+    toast.innerHTML = `
+        <div class="toast-icon" style="color: ${iconColor};">
+            <span class="material-symbols-outlined">${iconName}</span>
+        </div>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <div class="toast-desc">${desc}</div>
+        </div>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'toast-fade-out 0.3s forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4500);
+}
+
+// Update Study Streak
+function updateStreakAndStudy() {
+    const todayStr = getTodayDateString();
+    const yesterdayStr = getYesterdayDateString();
+
+    if (db.lastStudyDate !== todayStr) {
+        if (db.lastStudyDate === yesterdayStr) {
+            db.streak += 1;
+            showToast('¡Racha Incrementada! 🔥', `Llevas ${db.streak} días consecutivos de estudio. ¡Sigue así!`, 'local_fire_department', 'streak');
+        } else {
+            db.streak = 1;
+            showToast('¡Nueva Racha Iniciada! ⚡', `Has comenzado tu racha de estudio de hoy.`, 'local_fire_department', 'streak');
+        }
+        db.lastStudyDate = todayStr;
+        saveDatabase();
+    }
+}
+
+// Check and notify newly unlocked achievements
+function checkNewAchievements() {
+    if (!Array.isArray(db.unlockedAchievements)) {
+        db.unlockedAchievements = [];
+    }
+    let updated = false;
+    ACHIEVEMENTS.forEach(ach => {
+        if (!db.unlockedAchievements.includes(ach.id)) {
+            if (ach.condition()) {
+                db.unlockedAchievements.push(ach.id);
+                updated = true;
+                // Wait slightly to offset overlapping toasts
+                setTimeout(() => {
+                    showToast('¡Logro Desbloqueado! 🏆', `${ach.title}: ${ach.desc}`, 'workspace_premium', 'achievement');
+                    playSound('victory');
+                }, 500);
+            }
+        }
+    });
+    if (updated) {
+        saveDatabase();
+    }
+}
+
 // UI UPDATE
 function updateDashboardUI() {
+    setHeaderNavigationBlocked(false);
     const totalList = getAllQuestions();
     totalQuestionsCount.textContent = totalList.length;
     starredCount.textContent = db.starred.length;
-    soundIcon.textContent = db.soundEnabled ? "🔊" : "🔇";
+    soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
     streakCount.textContent = db.streak;
 
     if (Array.isArray(db.history) && db.history.length > 0) {
@@ -1754,8 +1990,13 @@ function populateSubjectsList() {
         const card = document.createElement('div');
         card.className = `subject-card ${isSel ? 'selected' : ''}`;
         card.innerHTML = `
-            <span class="subject-card-name">⭐ Favoritos</span>
-            <span class="subject-card-count">${currentStarredCount} preguntas guardadas</span>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <span class="subject-card-name" style="font-size: 13px; font-weight: 700; line-height: 1.2; display: inline-flex; align-items: center; gap: 4px;"><span class="material-symbols-outlined" style="font-size: 16px; color: #fbbf24;">star</span> Favoritos</span>
+                <span class="subject-card-count" style="font-size: 11px; color: var(--text-muted);">${currentStarredCount} preguntas</span>
+            </div>
+            <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(234, 179, 8, 0.1); border-radius: 50%; border: 1px solid rgba(234, 179, 8, 0.25);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: #ea580c;">star</span>
+            </div>
         `;
         card.addEventListener('click', () => toggleSubjectSelection('__starred__'));
         subjectsGrid.appendChild(card);
@@ -1771,19 +2012,22 @@ function populateSubjectsList() {
         const correct = correctStats[sub] || 0;
         const percent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
 
+        let recoveryBadge = '';
+        if (sub === 'Empleabilidad I') {
+            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar." style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; font-size: 10px; border-radius: 4px; font-weight: 600; display: inline-block; margin-left: 2px;">⚠️ Solo Recup.</span>`;
+        }
+
         card.innerHTML = `
-            <div>
-                <span class="subject-card-name">${sub}</span>
-                <span class="subject-card-count">${counts[sub]} preguntas</span>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span class="subject-card-name" style="font-size: 13px; font-weight: 700; line-height: 1.2;">${sub}</span>
+                    ${recoveryBadge}
+                </div>
+                <span class="subject-card-count" style="font-size: 11px; color: var(--text-muted);">${counts[sub]} preguntas</span>
             </div>
-            <div class="subject-mastery-container">
-                <div class="subject-mastery-info">
-                    <span>Dominio</span>
-                    <span>${percent}%</span>
-                </div>
-                <div class="subject-mastery-bar">
-                    <div class="subject-mastery-fill" style="width: ${percent}%;"></div>
-                </div>
+            <div class="subject-mastery-circle" title="Dominio: ${percent}%" style="width: 32px; height: 32px; border-radius: 50%; border: 3px solid ${percent > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'}; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: ${percent > 0 ? 'var(--success)' : 'var(--text-muted)'}; flex-shrink: 0; background: ${percent > 0 ? 'rgba(16, 185, 129, 0.05)' : 'transparent'}; position: relative;">
+                ${percent}%
+                ${percent > 0 ? `<svg style="position: absolute; top: -3px; left: -3px; width: 32px; height: 32px; transform: rotate(-90deg);"><circle cx="16" cy="16" r="14" stroke="var(--success)" stroke-width="3" fill="transparent" stroke-dasharray="88" stroke-dashoffset="${88 - (88 * percent) / 100}" stroke-linecap="round"/></svg>` : ''}
             </div>
         `;
         card.addEventListener('click', () => {
@@ -1849,18 +2093,20 @@ function renderAchievements() {
         const card = document.createElement('div');
         card.className = `achievement-badge-card ${unlocked ? 'unlocked' : ''}`;
         
-        let badgeIcon = '🔒';
+        let badgeIcon = '<span class="material-symbols-outlined">lock</span>';
         if (unlocked) {
-            if (ach.id === 'first_test') badgeIcon = '👣';
-            if (ach.id === 'perfect_score') badgeIcon = '💯';
-            if (ach.id === 'streak_3') badgeIcon = '🔥';
-            if (ach.id === 'streak_7') badgeIcon = '🛡️';
-            if (ach.id === 'starred_10') badgeIcon = '⭐';
-            if (ach.id === 'repaso_master') badgeIcon = '🧠';
+            if (ach.id === 'first_test') badgeIcon = '<span class="material-symbols-outlined" style="color: #a5b4fc;">rocket_launch</span>';
+            if (ach.id === 'perfect_score') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>';
+            if (ach.id === 'streak_3') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">local_fire_department</span>';
+            if (ach.id === 'streak_7') badgeIcon = '<span class="material-symbols-outlined" style="color: #38bdf8;">shield</span>';
+            if (ach.id === 'starred_10') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">star</span>';
+            if (ach.id === 'repaso_master') badgeIcon = '<span class="material-symbols-outlined" style="color: #c084fc;">psychology</span>';
+            if (ach.id === 'millionaire_play') badgeIcon = '<span class="material-symbols-outlined" style="color: #10b981;">emoji_events</span>';
+            if (ach.id === 'millionaire_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">monetization_on</span>';
         }
 
         card.innerHTML = `
-            <span class="badge-icon">${badgeIcon}</span>
+            <div class="badge-icon" style="font-size: 24px; margin-bottom: 8px; display: inline-flex; align-items: center; justify-content: center;">${badgeIcon}</div>
             <span class="badge-title">${ach.title}</span>
             <span class="badge-desc">${ach.desc}</span>
         `;
@@ -1889,15 +2135,111 @@ document.querySelectorAll('#sourceChips .chip-btn').forEach(btn => {
 // SOUND & RESET
 soundToggleBtn.addEventListener('click', () => {
     db.soundEnabled = !db.soundEnabled;
-    soundIcon.textContent = db.soundEnabled ? "🔊" : "🔇";
+    soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
     saveDatabase();
 });
 
 clearDatabaseBtn.addEventListener('click', () => {
-    if (confirm('¿Seguro que deseas eliminar todas las preguntas importadas y restaurar estadísticas?')) {
-        db = { questions: [], starred: [], history: [], soundEnabled: true, streak: 0, lastStudyDate: null, questionStats: {} };
-        saveDatabase();
+    showCustomConfirm('Eliminar Base de Datos', '¿Seguro que deseas eliminar todas las preguntas importadas y restaurar estadísticas?', 'delete_forever').then(confirmed => {
+        if (confirmed) {
+            db = {
+                questions: [],
+                starred: [],
+                history: [],
+                soundEnabled: true,
+                streak: 0,
+                lastStudyDate: null,
+                questionStats: {},
+                millionaireWins: 0,
+                millionairePlayed: 0,
+                unlockedAchievements: []
+            };
+            saveDatabase();
+        }
+    });
+});
+
+// INTERACTIVE WIDGETS AND BADGES
+document.getElementById('streakBadge').addEventListener('click', () => {
+    // Prevent opening if navigation is blocked
+    const studyGuideBtn = document.getElementById('studyGuideBtn');
+    if (studyGuideBtn.disabled) return;
+
+    const streakDays = db.streak || 0;
+    const lastDate = db.lastStudyDate || 'Sin registro';
+    const uniqueDates = new Set(db.history ? db.history.map(h => h.date.split(" ")[0]) : []);
+    const totalDaysCount = uniqueDates.size;
+    
+    let htmlContent = `
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                <span>Racha actual:</span>
+                <strong style="color: #f87171; display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">local_fire_department</span> ${streakDays} días
+                </strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                <span>Último día de estudio:</span>
+                <strong style="color: #6366f1;">${lastDate}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                <span>Sesiones de examen finalizadas:</span>
+                <strong style="color: #10b981;">${db.history ? db.history.length : 0}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; padding-bottom: 8px;">
+                <span>Días totales dedicados:</span>
+                <strong style="color: #fbbf24;">${totalDaysCount}</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; font-style: italic; margin-top: 8px;">
+                ${streakDays > 0 ? "¡Felicidades por tu constancia! Sigue completando cuestionarios a diario para mantener encendido tu fuego de estudio." : "Comienza hoy mismo un cuestionario o una partida de Modo Millonario para iniciar tu racha diaria de estudio."}
+            </p>
+        </div>
+    `;
+    showCustomAlert('Detalles de tu Racha 🔥', htmlContent, 'local_fire_department');
+});
+
+document.getElementById('widgetSubjects').addEventListener('click', () => {
+    document.querySelector('.subjects-panel').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('widgetStarred').addEventListener('click', () => {
+    const allQ = getAllQuestions();
+    const starredList = allQ.filter(q => db.starred.includes(normalizeString(q.question)));
+    
+    if (starredList.length === 0) {
+        showCustomAlert('Mis Favoritos ⭐', '<p style="text-align: center; color: var(--text-muted); margin: 20px 0;">No tienes ninguna pregunta guardada como favorita todavía. Puedes guardar preguntas durante los cuestionarios activos o al revisar tus respuestas incorrectas.</p>', 'star');
+        return;
     }
+    
+    let htmlContent = `
+        <div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; padding-right: 4px;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Aquí tienes tus ${starredList.length} preguntas favoritas. Haz clic en "Aceptar" para volver.</p>
+    `;
+    
+    starredList.forEach((q, idx) => {
+        htmlContent += `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 12px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <span style="font-weight: 700; color: #fbbf24;">${idx + 1}. [${q.subject || 'SMR'}]</span>
+                </div>
+                <p style="margin: 2px 0; font-weight: 500; color: white;">${q.question}</p>
+                <div style="font-size: 0.8rem; color: var(--success); display: flex; align-items: center; gap: 4px; background: rgba(16,185,129,0.08); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.15);">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> <strong>Solución:</strong> ${q.answer}
+                </div>
+            </div>
+        `;
+    });
+    
+    htmlContent += '</div>';
+    showCustomAlert('Preguntas Favoritas ⭐', htmlContent, 'star');
+});
+
+document.getElementById('widgetScore').addEventListener('click', () => {
+    document.querySelector('.history-card').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('widgetAchievements').addEventListener('click', () => {
+    document.querySelector('.achievements-card').scrollIntoView({ behavior: 'smooth' });
 });
 
 // MULTI-SELECTION ASSIGNMENTS
@@ -1963,12 +2305,12 @@ backupFileInput.addEventListener('change', (e) => {
                 if (parsed.questions && parsed.starred && parsed.history) {
                     db = parsed;
                     saveDatabase();
-                    alert("¡Copia de seguridad restaurada correctamente!");
+                    showCustomAlert('Copia Restaurada', '¡Copia de seguridad restaurada correctamente!', 'check_circle');
                 } else {
-                    alert("Formato de copia no válido.");
+                    showCustomAlert('Formato Incorrecto', 'Formato de copia no válido.', 'error');
                 }
             } catch (err) {
-                alert("Error al abrir archivo de copia.");
+                showCustomAlert('Error', 'Error al abrir archivo de copia.', 'error');
             }
         };
         reader.readAsText(file);
@@ -2053,10 +2395,10 @@ function processFiles(files) {
                 loadedCount++;
                 if (loadedCount === files.length) {
                     saveDatabase();
-                    alert(`¡Importación completa!\nPreguntas nuevas: ${newCount}\nDuplicados omitidos: ${duplicateCount}`);
+                    showCustomAlert('Importación Exitosa', `¡Importación completa!\nPreguntas nuevas: ${newCount}\nDuplicados omitidos: ${duplicateCount}`, 'check_circle');
                 }
             } catch (err) {
-                alert(`Error en el formato de ${file.name}.\nDetalle: ${err.message}\n\nRevisa que el archivo JSON esté bien escrito (comillas dobles, comas, etc).`);
+                showCustomAlert('Error de Formato', `Error en el formato de ${file.name}.\nDetalle: ${err.message}\n\nRevisa que el archivo JSON esté bien escrito (comillas dobles, comas, etc).`, 'error');
             }
         };
         reader.readAsText(file);
@@ -2091,7 +2433,7 @@ startTestBtn.addEventListener('click', () => {
     }
 
     if (pool.length === 0) {
-        alert("No hay preguntas para los parámetros seleccionados.");
+        showCustomAlert('Sin Resultados', 'No hay preguntas para los parámetros seleccionados.', 'search_off');
         return;
     }
 
@@ -2130,6 +2472,7 @@ startTestBtn.addEventListener('click', () => {
     session.timeSpent = 0;
 
     showScreen(testScreen);
+    setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
 });
@@ -2138,7 +2481,7 @@ startTestBtn.addEventListener('click', () => {
 quickChallengeBtn.addEventListener('click', () => {
     let pool = shuffleArray(getAllQuestions());
     if (pool.length === 0) {
-        alert("Carga algunas preguntas primero para jugar un desafío.");
+        showCustomAlert('Sin Preguntas', 'Carga algunas preguntas primero para jugar un desafío.', 'warning');
         return;
     }
 
@@ -2156,6 +2499,7 @@ quickChallengeBtn.addEventListener('click', () => {
     session.timeLimit = 3.5; // 210 seconds total
 
     showScreen(testScreen);
+    setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
 });
@@ -2163,6 +2507,7 @@ quickChallengeBtn.addEventListener('click', () => {
 // TIMER
 function setupTimer() {
     clearInterval(session.timerInterval);
+    testTimer.classList.remove('warning-pulse');
     if (session.mode === 'exam') {
         testTimer.style.display = 'inline-block';
         session.timeRemaining = Math.round(session.timeLimit * 60);
@@ -2173,10 +2518,19 @@ function setupTimer() {
             session.timeSpent++;
             updateTimerDisplay();
             
+            if (session.timeRemaining <= 10 && session.timeRemaining > 0) {
+                testTimer.classList.add('warning-pulse');
+                playSound('tick');
+            } else {
+                testTimer.classList.remove('warning-pulse');
+            }
+            
             if (session.timeRemaining <= 0) {
                 clearInterval(session.timerInterval);
-                alert("¡Desafío finalizado por tiempo!");
-                finishTest();
+                testTimer.classList.remove('warning-pulse');
+                showCustomAlert('Tiempo Agotado', '¡Cuestionario finalizado por límite de tiempo!', 'alarm').then(() => {
+                    finishTest();
+                });
             }
         }, 1000);
     } else {
@@ -2222,6 +2576,17 @@ function renderQuestion() {
 
     optionsContainer.innerHTML = '';
     explanationBox.style.display = 'none';
+    hintBox.style.display = 'none';
+
+    if (session.mode === 'practice') {
+        showHintBtn.style.display = 'inline-flex';
+        showHintBtn.onclick = () => {
+            hintBox.style.display = 'flex';
+            hintText.textContent = generateHint(q);
+        };
+    } else {
+        showHintBtn.style.display = 'none';
+    }
 
     q.shuffledOptions.forEach(opt => {
         const btn = document.createElement('div');
@@ -2304,9 +2669,14 @@ nextBtn.addEventListener('click', () => {
 finishBtn.addEventListener('click', () => {
     const unans = session.questions.length - Object.keys(session.answers).length;
     if (unans > 0 && (session.mode === 'exam' || session.mode === 'smart')) {
-        if (!confirm(`Tienes ${unans} preguntas sin responder. ¿Finalizar examen?`)) return;
+        showCustomConfirm('Finalizar Examen', `Tienes ${unans} preguntas sin responder. ¿Seguro que deseas finalizar el examen?`, 'warning').then(confirmed => {
+            if (confirmed) {
+                finishTest();
+            }
+        });
+    } else {
+        finishTest();
     }
-    finishTest();
 });
 speakActiveBtn.addEventListener('click', () => {
     const q = session.questions[session.currentIndex];
@@ -2318,17 +2688,21 @@ speakActiveBtn.addEventListener('click', () => {
     speakText(textToSpeak);
 });
 exitTestBtn.addEventListener('click', () => {
-    if (confirm("¿Estás seguro de que deseas salir del test? Tu progreso actual se perderá.")) {
-        clearInterval(session.timerInterval);
-        stopSpeaking();
-        showScreen(dashboardScreen);
-        updateDashboardUI();
-    }
+    showCustomConfirm('Salir del Test', '¿Estás seguro de que deseas salir del test? Tu progreso actual se perderá.', 'warning').then(confirmed => {
+        if (confirmed) {
+            clearInterval(session.timerInterval);
+            setHeaderNavigationBlocked(false);
+            stopSpeaking();
+            showScreen(dashboardScreen);
+            updateDashboardUI();
+        }
+    });
 });
 
 // COMPLETION
 function finishTest() {
     clearInterval(session.timerInterval);
+    setHeaderNavigationBlocked(false);
     let correct = 0;
     
     session.questions.forEach((q, idx) => {
@@ -2351,17 +2725,8 @@ function finishTest() {
     const percent = Math.round((correct / session.questions.length) * 100);
 
     // Save Daily Study Streak Progress
-    const todayStr = getTodayDateString();
-    const yesterdayStr = getYesterdayDateString();
-
-    if (db.lastStudyDate !== todayStr) {
-        if (db.lastStudyDate === yesterdayStr) {
-            db.streak += 1;
-        } else {
-            db.streak = 1;
-        }
-        db.lastStudyDate = todayStr;
-    }
+    updateStreakAndStudy();
+    checkNewAchievements();
 
     const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     let subjectLabel = session.selectedSubjects.includes('__starred__') ? "Favoritos" : 
@@ -2420,7 +2785,7 @@ function renderReviewList(filter) {
         item.innerHTML = `
             <div class="review-item-header">
                 <span class="review-qtext">${idx + 1}. [${q.source === 'repaso' ? 'Repaso' : 'Oficial'}] ${q.question}</span>
-                <button class="star-btn ${isStarred ? 'active' : ''}">⭐</button>
+                <button class="star-btn ${isStarred ? 'active' : ''}"><span class="material-symbols-outlined" style="font-size: 18px;">star</span></button>
             </div>
             <div class="review-ans-info">
                 <div class="review-user-ans ${isCorrect ? 'user-correct' : 'user-wrong'}">
@@ -2507,7 +2872,7 @@ function renderStudyList() {
         let optionsHTML = '';
         q.options.forEach(opt => {
             const isCorrect = normalizeString(opt) === normalizeString(q.answer);
-            optionsHTML += `<li class="study-card-opt-item ${isCorrect ? 'correct-ans' : ''}">${isCorrect ? '✅ ' : ''}${opt}</li>`;
+            optionsHTML += `<li class="study-card-opt-item ${isCorrect ? 'correct-ans' : ''}" style="display: flex; align-items: center; gap: 6px;">${isCorrect ? '<span class="material-symbols-outlined" style="font-size: 16px; color: var(--success);">check_circle</span>' : ''}${opt}</li>`;
         });
 
         card.innerHTML = `
@@ -2563,6 +2928,29 @@ function showScreen(screen) {
     screen.classList.add('active');
 }
 
+// Block/Unblock header buttons during active gameplay or tests
+function setHeaderNavigationBlocked(blocked) {
+    const studyGuideBtn = document.getElementById('studyGuideBtn');
+    const millionaireGameBtn = document.getElementById('millionaireGameBtn');
+    if (blocked) {
+        studyGuideBtn.disabled = true;
+        studyGuideBtn.style.opacity = '0.3';
+        studyGuideBtn.style.pointerEvents = 'none';
+        
+        millionaireGameBtn.disabled = true;
+        millionaireGameBtn.style.opacity = '0.3';
+        millionaireGameBtn.style.pointerEvents = 'none';
+    } else {
+        studyGuideBtn.disabled = false;
+        studyGuideBtn.style.opacity = '1';
+        studyGuideBtn.style.pointerEvents = 'auto';
+        
+        millionaireGameBtn.disabled = false;
+        millionaireGameBtn.style.opacity = '1';
+        millionaireGameBtn.style.pointerEvents = 'auto';
+    }
+}
+
 // Pestañas móviles de la Guía de Estudio
 document.querySelectorAll('#studyTabs .study-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2582,6 +2970,415 @@ studyExpandAllBtn.addEventListener('click', () => {
 studyCollapseAllBtn.addEventListener('click', () => {
     document.querySelectorAll('.study-card').forEach(c => c.classList.remove('is-expanded'));
 });
+
+// MILLIONAIRE MINIGAME STATE
+const millSession = {
+    questions: [],
+    currentIndex: 0,
+    selectedSubjects: [],
+    lifelines: {
+        fiftyFifty: true,
+        audience: true,
+        phone: true
+    },
+    prizeLadder: [
+        "100 €", "200 €", "300 €", "500 €", "1.000 €",
+        "2.000 €", "4.000 €", "8.000 €", "16.000 €", "32.000 €",
+        "64.000 €", "125.000 €", "250.000 €", "500.000 €", "1.000.000 €"
+    ],
+    safeLevels: [4, 9] // 1.000 € and 32.000 €
+};
+
+// Bind Millionaire Entry
+millionaireGameBtn.addEventListener('click', () => {
+    showScreen(millionaireScreen);
+    document.getElementById('millionaireIntro').style.display = 'flex';
+    millionaireSetup.style.display = 'none';
+    millionaireGame.style.display = 'none';
+});
+
+document.getElementById('millionaireIntroBackBtn').addEventListener('click', () => {
+    showScreen(dashboardScreen);
+    updateDashboardUI();
+});
+
+document.getElementById('millionaireIntroStartBtn').addEventListener('click', () => {
+    playSound('intro');
+    document.getElementById('millionaireIntro').style.display = 'none';
+    millionaireSetup.style.display = 'block';
+    populateMillionaireSubjects();
+});
+
+millionaireBackBtn.addEventListener('click', () => {
+    document.getElementById('millionaireIntro').style.display = 'flex';
+    millionaireSetup.style.display = 'none';
+});
+
+function populateMillionaireSubjects() {
+    millionaireSubjectsGrid.innerHTML = '';
+    const counts = {};
+    const pool = getAllQuestions();
+    
+    pool.forEach(q => {
+        const sub = q.subject || "Sin clasificar";
+        counts[sub] = (counts[sub] || 0) + 1;
+    });
+
+    const unique = Object.keys(counts).sort();
+    
+    // Set all selected by default
+    millSession.selectedSubjects = [...unique];
+
+    unique.forEach(sub => {
+        const card = document.createElement('div');
+        const isSel = millSession.selectedSubjects.includes(sub);
+        card.className = `subject-card ${isSel ? 'selected' : ''}`;
+        
+        let recoveryBadge = '';
+        if (sub === 'Empleabilidad I') {
+            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar." style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; font-size: 10px; border-radius: 4px; font-weight: 600; display: inline-block; margin-left: 2px;">⚠️ Solo Recup.</span>`;
+        }
+
+        card.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span class="subject-card-name" style="font-size: 13px; font-weight: 700; line-height: 1.2;">${sub}</span>
+                    ${recoveryBadge}
+                </div>
+                <span class="subject-card-count" style="font-size: 11px; color: var(--text-muted);">${counts[sub]} preguntas</span>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => {
+            if (millSession.selectedSubjects.includes(sub)) {
+                millSession.selectedSubjects = millSession.selectedSubjects.filter(s => s !== sub);
+                card.classList.remove('selected');
+            } else {
+                millSession.selectedSubjects.push(sub);
+                card.classList.add('selected');
+            }
+            startMillionaireGameBtn.disabled = millSession.selectedSubjects.length === 0;
+        });
+        
+        millionaireSubjectsGrid.appendChild(card);
+    });
+    
+    startMillionaireGameBtn.disabled = millSession.selectedSubjects.length === 0;
+}
+
+millSelectAllBtn.addEventListener('click', () => {
+    const cards = millionaireSubjectsGrid.querySelectorAll('.subject-card');
+    const pool = getAllQuestions();
+    const subs = Array.from(new Set(pool.map(q => q.subject || "Sin clasificar"))).sort();
+    millSession.selectedSubjects = [...subs];
+    cards.forEach(c => c.classList.add('selected'));
+    startMillionaireGameBtn.disabled = false;
+});
+
+millDeselectAllBtn.addEventListener('click', () => {
+    const cards = millionaireSubjectsGrid.querySelectorAll('.subject-card');
+    millSession.selectedSubjects = [];
+    cards.forEach(c => c.classList.remove('selected'));
+    startMillionaireGameBtn.disabled = true;
+});
+
+// START GAME
+startMillionaireGameBtn.addEventListener('click', () => {
+    const pool = getAllQuestions().filter(q => millSession.selectedSubjects.includes(q.subject || "Sin clasificar"));
+    if (pool.length < 15) {
+        showCustomAlert('Preguntas Insuficientes', `Se necesitan al menos 15 preguntas en las asignaturas seleccionadas (actualmente hay ${pool.length}). Por favor, selecciona más asignaturas.`, 'warning');
+        return;
+    }
+    
+    const shuffled = [...pool];
+    shuffleArray(shuffled);
+    millSession.questions = shuffled.slice(0, 15);
+    millSession.currentIndex = 0;
+    
+    millSession.lifelines.fiftyFifty = true;
+    millSession.lifelines.audience = true;
+    millSession.lifelines.phone = true;
+    
+    resetLifelineButtons();
+    
+    millionaireSetup.style.display = 'none';
+    millionaireGame.style.display = 'flex';
+    setHeaderNavigationBlocked(true);
+    
+    renderMillionaireQuestion();
+});
+
+function resetLifelineButtons() {
+    millLifeline50.disabled = false;
+    millLifeline50.style.opacity = '1';
+    millLifelineAudience.disabled = false;
+    millLifelineAudience.style.opacity = '1';
+    millLifelinePhone.disabled = false;
+    millLifelinePhone.style.opacity = '1';
+    millLifelineFeedbackBox.style.display = 'none';
+}
+
+// RENDER ACTIVE MILLIONAIRE QUESTION
+function renderMillionaireQuestion() {
+    stopSpeaking();
+    const q = millSession.questions[millSession.currentIndex];
+    
+    const currentPrize = millSession.prizeLadder[millSession.currentIndex];
+    millCurrentLevelLabel.textContent = `Pregunta ${millSession.currentIndex + 1} de 15 — Premio actual: ${currentPrize}`;
+    
+    millQuestionSubjectTag.textContent = q.subject || "Sin clasificar";
+    millQuestionText.textContent = q.question;
+    millLifelineFeedbackBox.style.display = 'none';
+    
+    q.shuffledOptions = [...q.options];
+    shuffleArray(q.shuffledOptions);
+    
+    millOptionsContainer.innerHTML = '';
+    q.shuffledOptions.forEach((opt, idx) => {
+        const optionLetter = String.fromCharCode(65 + idx); // A, B, C, D
+        const btn = document.createElement('div');
+        btn.className = 'option-item';
+        btn.innerHTML = `<strong style="color: var(--primary); margin-right: 8px;">${optionLetter}:</strong> <span>${opt}</span>`;
+        
+        btn.onclick = () => {
+            showCustomConfirm('Respuesta Definitiva', `¿Es tu respuesta definitiva para la opción ${optionLetter}?`, 'help').then(confirmed => {
+                if (confirmed) {
+                    checkMillionaireAnswer(opt, btn);
+                }
+            });
+        };
+        millOptionsContainer.appendChild(btn);
+    });
+    
+    renderPrizeLadder();
+}
+
+function renderPrizeLadder() {
+    millPrizeLadderPanel.innerHTML = '<h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text-glow); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Premios</h3>';
+    
+    for (let i = 14; i >= 0; i--) {
+        const levelNum = i + 1;
+        const prizeVal = millSession.prizeLadder[i];
+        const isCurrent = millSession.currentIndex === i;
+        const isSafe = millSession.safeLevels.includes(i) || i === 14;
+        
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.padding = '6px 12px';
+        row.style.borderRadius = '6px';
+        row.style.fontSize = '0.9rem';
+        row.style.fontWeight = isCurrent || isSafe ? '700' : '400';
+        
+        if (isCurrent) {
+            row.style.background = 'rgba(251, 191, 36, 0.2)';
+            row.style.border = '1px solid #fbbf24';
+            row.style.color = '#fbbf24';
+        } else if (i < millSession.currentIndex) {
+            row.style.color = 'var(--success)';
+            row.style.opacity = '0.7';
+        } else {
+            row.style.color = isSafe ? '#c084fc' : 'var(--text-muted)';
+        }
+        
+        row.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 4px;">
+                ${levelNum}. ${isSafe ? '<span class="material-symbols-outlined" style="font-size: 14px; color: #fbbf24; display: inline-flex;">grade</span>' : ''} Pregunta
+            </span>
+            <span>${prizeVal}</span>
+        `;
+        millPrizeLadderPanel.appendChild(row);
+    }
+}
+
+// LIFELINE 1: 50:50
+millLifeline50.addEventListener('click', () => {
+    if (!millSession.lifelines.fiftyFifty) return;
+    millSession.lifelines.fiftyFifty = false;
+    millLifeline50.disabled = true;
+    millLifeline50.style.opacity = '0.3';
+    
+    const q = millSession.questions[millSession.currentIndex];
+    const correctVal = q.answer;
+    
+    const incorrect = q.shuffledOptions.filter(opt => normalizeString(opt) !== normalizeString(correctVal));
+    shuffleArray(incorrect);
+    
+    const toHide = incorrect.slice(0, 2);
+    const optionElements = millOptionsContainer.querySelectorAll('.option-item');
+    
+    optionElements.forEach(el => {
+        const textSpan = el.querySelector('span');
+        if (textSpan && toHide.includes(textSpan.textContent)) {
+            el.style.opacity = '0.15';
+            el.style.pointerEvents = 'none';
+        }
+    });
+    
+    playSound('correct');
+});
+
+// LIFELINE 2: ASK THE AUDIENCE
+millLifelineAudience.addEventListener('click', () => {
+    if (!millSession.lifelines.audience) return;
+    millSession.lifelines.audience = false;
+    millLifelineAudience.disabled = true;
+    millLifelineAudience.style.opacity = '0.3';
+    
+    const q = millSession.questions[millSession.currentIndex];
+    const correctVal = q.answer;
+    
+    let distribution = {};
+    let total = 100;
+    
+    const correctShare = Math.floor(Math.random() * 25) + 50;
+    distribution[correctVal] = correctShare;
+    total -= correctShare;
+    
+    const remainingOpts = q.shuffledOptions.filter(opt => normalizeString(opt) !== normalizeString(correctVal));
+    remainingOpts.forEach((opt, idx) => {
+        if (idx === remainingOpts.length - 1) {
+            distribution[opt] = total;
+        } else {
+            const share = Math.floor(Math.random() * total);
+            distribution[opt] = share;
+            total -= share;
+        }
+    });
+    
+    millLifelineFeedbackBox.style.display = 'flex';
+    millFeedbackIcon.textContent = 'bar_chart';
+    
+    let html = '<strong>Resultado de la votación del público:</strong><div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">';
+    q.shuffledOptions.forEach((opt, idx) => {
+        const optionLetter = String.fromCharCode(65 + idx);
+        const share = distribution[opt] || 0;
+        html += `
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem;">
+                <span style="width: 20px; font-weight: 700; color: #fbbf24;">${optionLetter}:</span>
+                <div style="flex: 1; height: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; overflow: hidden;">
+                    <div style="width: ${share}%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
+                </div>
+                <span style="width: 35px; font-weight: 700; text-align: right;">${share}%</span>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    millFeedbackContent.innerHTML = html;
+    playSound('correct');
+});
+
+// LIFELINE 3: PHONE A FRIEND
+millLifelinePhone.addEventListener('click', () => {
+    if (!millSession.lifelines.phone) return;
+    millSession.lifelines.phone = false;
+    millLifelinePhone.disabled = true;
+    millLifelinePhone.style.opacity = '0.3';
+    
+    const q = millSession.questions[millSession.currentIndex];
+    const correctVal = q.answer;
+    
+    const correctLetter = String.fromCharCode(65 + q.shuffledOptions.indexOf(correctVal));
+    const randomIncorrect = q.shuffledOptions.filter(opt => normalizeString(opt) !== normalizeString(correctVal));
+    const wrongOpt = randomIncorrect[Math.floor(Math.random() * randomIncorrect.length)];
+    const incorrectLetter = String.fromCharCode(65 + q.shuffledOptions.indexOf(wrongOpt));
+    
+    const isFriendRight = Math.random() < 0.75;
+    const recommendedLetter = isFriendRight ? correctLetter : incorrectLetter;
+    const confidence = isFriendRight ? Math.floor(Math.random() * 20) + 75 : Math.floor(Math.random() * 25) + 40;
+    
+    millLifelineFeedbackBox.style.display = 'flex';
+    millFeedbackIcon.textContent = 'phone_in_talk';
+    millFeedbackContent.innerHTML = `
+        <strong>Llamando a tu amigo experto en SMR...</strong><br>
+        <p style="margin-top: 8px; font-style: italic; color: #a5b4fc;">"Oye, estoy un ${confidence}% seguro de que la respuesta correcta es la <strong>opción ${recommendedLetter}</strong>."</p>
+    `;
+    playSound('correct');
+});
+
+// EXIT ACTIVE GAME
+exitMillionaireBtn.addEventListener('click', () => {
+    const currentPrize = millSession.currentIndex > 0 ? millSession.prizeLadder[millSession.currentIndex - 1] : "0 €";
+    showCustomConfirm('Retirarse del Juego', `¿Deseas retirarte del juego y llevarte el premio acumulado actual de ${currentPrize}?`, 'payments').then(confirmed => {
+        if (confirmed) {
+            showCustomAlert('Juego Terminado', `¡Enhorabuena! Te has retirado con un premio de: ${currentPrize} 💰`, 'emoji_events').then(() => {
+                db.millionairePlayed = (db.millionairePlayed || 0) + 1;
+                updateStreakAndStudy();
+                checkNewAchievements();
+                showScreen(dashboardScreen);
+                updateDashboardUI();
+            });
+        }
+    });
+});
+
+// VERIFY MILLIONAIRE ANSWER
+function checkMillionaireAnswer(selected, selectedElement) {
+    const q = millSession.questions[millSession.currentIndex];
+    const isCorrect = normalizeString(selected) === normalizeString(q.answer);
+    
+    millOptionsContainer.querySelectorAll('.option-item').forEach(el => {
+        el.style.pointerEvents = 'none';
+        const textSpan = el.querySelector('span');
+        if (textSpan && normalizeString(textSpan.textContent) === normalizeString(q.answer)) {
+            el.style.background = 'var(--success-bg)';
+            el.style.borderColor = 'var(--success-border)';
+            el.querySelector('strong').style.color = 'var(--success)';
+        }
+    });
+    
+    if (isCorrect) {
+        selectedElement.style.background = 'var(--success-bg)';
+        selectedElement.style.borderColor = 'var(--success-border)';
+        playSound('correct');
+        
+        setTimeout(() => {
+            if (millSession.currentIndex === 14) {
+                db.millionaireWins = (db.millionaireWins || 0) + 1;
+                db.millionairePlayed = (db.millionairePlayed || 0) + 1;
+                updateStreakAndStudy();
+                startConfetti();
+                checkNewAchievements();
+                showCustomAlert('🎉 ¡INCREÍBLE! 🎉', '¡Has contestado correctamente las 15 preguntas y has ganado el MILLÓN DE EUROS VIRTUAL de SMR Test Prep! 🏆💰', 'workspace_premium').then(() => {
+                    showScreen(dashboardScreen);
+                    updateDashboardUI();
+                });
+            } else {
+                millSession.currentIndex++;
+                renderMillionaireQuestion();
+            }
+        }, 1500);
+    } else {
+        selectedElement.style.background = 'var(--danger-bg)';
+        selectedElement.style.borderColor = 'var(--danger-border)';
+        selectedElement.querySelector('strong').style.color = 'var(--danger)';
+        playSound('wrong');
+        
+        let safePrize = "0 €";
+        let lastSafeIndex = -1;
+        
+        millSession.safeLevels.forEach(lvl => {
+            if (lvl < millSession.currentIndex) {
+                lastSafeIndex = lvl;
+            }
+        });
+        
+        if (lastSafeIndex !== -1) {
+            safePrize = millSession.prizeLadder[lastSafeIndex];
+        }
+        
+        setTimeout(() => {
+            db.millionairePlayed = (db.millionairePlayed || 0) + 1;
+            updateStreakAndStudy();
+            checkNewAchievements();
+            showCustomAlert('💥 ¡Respuesta incorrecta! 💥', `El juego ha terminado. La respuesta correcta era: ${q.answer}.\n\nTe llevas a casa el premio asegurado de: ${safePrize} 💰`, 'dangerous').then(() => {
+                showScreen(dashboardScreen);
+                updateDashboardUI();
+            });
+        }, 2000);
+    }
+}
 
 // INITIAL STARTUP
 loadDatabase();
