@@ -1125,13 +1125,13 @@ body {
     padding-right: 8px;
 }
 
-/* STUDY QUESTION CARD */
 .study-card {
     background: rgba(30, 41, 59, 0.2);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 18px;
     transition: var(--transition);
+    cursor: pointer;
 }
 
 .study-card:hover {
@@ -1142,8 +1142,23 @@ body {
 .study-card-q {
     font-weight: 700;
     font-size: 14px;
-    margin-bottom: 12px;
     line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.study-card-q::after {
+    content: "▼";
+    font-size: 10px;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.study-card.is-expanded .study-card-q::after {
+    transform: rotate(180deg);
 }
 
 .study-card-options {
@@ -1152,6 +1167,17 @@ body {
     flex-direction: column;
     gap: 6px;
     font-size: 13px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin-top 0.3s ease;
+    margin-top: 0;
+}
+
+.study-card.is-expanded .study-card-options {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 12px;
 }
 
 .study-card-opt-item {
@@ -1454,6 +1480,13 @@ body {
     }
     .study-column.active {
         display: flex;
+    }
+    #testScreen {
+        padding-bottom: 90px;
+    }
+    .test-navigation {
+        margin-top: 24px;
+        padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 }
 

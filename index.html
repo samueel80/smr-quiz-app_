@@ -206,7 +206,9 @@
                         <div class="test-indicators">
                             <span id="questionSourceTag" class="source-badge">Oficial</span>
                             <button id="bookmarkActiveBtn" class="star-btn" title="Añadir a favoritos">⭐</button>
+                            <button id="speakActiveBtn" class="star-btn speak-btn" title="Escuchar pregunta en voz alta">🔊</button>
                             <span id="testTimer" class="timer-badge">00:00</span>
+                            <button id="exitTestBtn" class="exit-btn" title="Salir del cuestionario" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: 6px; display: inline-flex; align-items: center;">✕ Salir</button>
                         </div>
                     </div>
                     <div class="progress-bar-container">
@@ -307,6 +309,10 @@
                             <label for="studySearch">Buscar en preguntas:</label>
                             <input type="text" id="studySearch" placeholder="Escribe palabras clave...">
                         </div>
+                    </div>
+                    <div class="study-actions-row" style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button id="studyExpandAllBtn" class="btn secondary-btn text-btn" style="padding: 6px 12px; font-size: 0.85rem;">👁️ Mostrar todas las respuestas</button>
+                        <button id="studyCollapseAllBtn" class="btn secondary-btn text-btn" style="padding: 6px 12px; font-size: 0.85rem;">🙈 Ocultar todas las respuestas</button>
                     </div>
                 </div>
 

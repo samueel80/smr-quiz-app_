@@ -1415,6 +1415,24 @@ function animateConfetti() {
     }
 }
 
+// Text-to-Speech Engine
+let currentUtterance = null;
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1.05;
+        window.speechSynthesis.speak(utterance);
+        currentUtterance = utterance;
+    }
+}
+function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
 // Elements
 const dashboardScreen = document.getElementById('dashboardScreen');
 const testScreen = document.getElementById('testScreen');
@@ -1490,6 +1508,10 @@ const studyOficialCount = document.getElementById('studyOficialCount');
 const studyRepasoCount = document.getElementById('studyRepasoCount');
 const studyOficialList = document.getElementById('studyOficialList');
 const studyRepasoList = document.getElementById('studyRepasoList');
+const speakActiveBtn = document.getElementById('speakActiveBtn');
+const studyExpandAllBtn = document.getElementById('studyExpandAllBtn');
+const studyCollapseAllBtn = document.getElementById('studyCollapseAllBtn');
+const exitTestBtn = document.getElementById('exitTestBtn');
 
 // SHUFFLE HELPER
 function shuffleArray(arr) {
@@ -2173,6 +2195,7 @@ function updateTimerDisplay() {
 
 // RENDER QUESTION
 function renderQuestion() {
+    stopSpeaking();
     const q = session.questions[session.currentIndex];
     currentQuestionNum.textContent = `Pregunta ${session.currentIndex + 1} de ${session.questions.length}`;
     progressBar.style.width = `${((session.currentIndex + 1) / session.questions.length) * 100}%`;
@@ -2284,6 +2307,23 @@ finishBtn.addEventListener('click', () => {
         if (!confirm(`Tienes ${unans} preguntas sin responder. ¿Finalizar examen?`)) return;
     }
     finishTest();
+});
+speakActiveBtn.addEventListener('click', () => {
+    const q = session.questions[session.currentIndex];
+    if (!q) return;
+    let textToSpeak = `${q.question}. `;
+    q.shuffledOptions.forEach((opt, idx) => {
+        textToSpeak += `Opción ${idx + 1}: ${opt}. `;
+    });
+    speakText(textToSpeak);
+});
+exitTestBtn.addEventListener('click', () => {
+    if (confirm("¿Estás seguro de que deseas salir del test? Tu progreso actual se perderá.")) {
+        clearInterval(session.timerInterval);
+        stopSpeaking();
+        showScreen(dashboardScreen);
+        updateDashboardUI();
+    }
 });
 
 // COMPLETION
@@ -2471,11 +2511,30 @@ function renderStudyList() {
         });
 
         card.innerHTML = `
-            <div class="study-card-q">${q.question}</div>
+            <div class="study-card-q">
+                <span>${q.question}</span>
+                <button class="study-speak-btn" title="Escuchar pregunta" style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0 4px; color: var(--text-muted); transition: color 0.2s;">🔊</button>
+            </div>
             <ul class="study-card-options">
                 ${optionsHTML}
             </ul>
         `;
+
+        // Interactive toggle for active recall
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.study-speak-btn')) return;
+            card.classList.toggle('is-expanded');
+        });
+
+        const speakBtn = card.querySelector('.study-speak-btn');
+        speakBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let textToSpeak = `${q.question}. `;
+            q.options.forEach((opt, idx) => {
+                textToSpeak += `Opción ${idx + 1}: ${opt}. `;
+            });
+            speakText(textToSpeak);
+        });
 
         if (q.source === 'repaso') {
             studyRepasoList.appendChild(card);
@@ -2499,6 +2558,7 @@ function renderStudyList() {
 
 // SCREEN TOGGLE
 function showScreen(screen) {
+    stopSpeaking();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
 }
@@ -2513,6 +2573,14 @@ document.querySelectorAll('#studyTabs .study-tab-btn').forEach(btn => {
         document.querySelector('.study-column.column-oficial').classList.toggle('active', tab === 'oficial');
         document.querySelector('.study-column.column-repaso').classList.toggle('active', tab === 'repaso');
     });
+});
+
+// Expand/Collapse All buttons
+studyExpandAllBtn.addEventListener('click', () => {
+    document.querySelectorAll('.study-card').forEach(c => c.classList.add('is-expanded'));
+});
+studyCollapseAllBtn.addEventListener('click', () => {
+    document.querySelectorAll('.study-card').forEach(c => c.classList.remove('is-expanded'));
 });
 
 // INITIAL STARTUP
