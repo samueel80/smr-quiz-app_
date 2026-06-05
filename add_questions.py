@@ -230,8 +230,6 @@ emp2_qs = [
 ]
 questions.extend(emp2_qs)
 
-print(f"Generated {len(questions)} high-quality Cesur-based questions.")
-
 # Generate JS array code
 js_array_lines = []
 js_array_lines.append("const SEED_REPASO_QUESTIONS = [")
@@ -255,18 +253,23 @@ js_array_lines.append("];")
 
 js_array_code = "\n".join(js_array_lines)
 
-# Read app.js
-with open("app.js", "r", encoding="utf-8") as f:
-    content = f.read()
+def main():
+    print(f"Generated {len(questions)} high-quality Cesur-based questions.")
+    # Read app.js
+    with open("app.js", "r", encoding="utf-8") as f:
+        content = f.read()
 
-# Replace SEED_REPASO_QUESTIONS pattern in app.js
-# The array begins with "const SEED_REPASO_QUESTIONS = [" and ends before "// STATE AND DATABASE MANAGEMENT"
-pattern = r"const SEED_REPASO_QUESTIONS = \[.*?\];\n"
-match = re.search(pattern, content, re.DOTALL)
-if match:
-    new_content = content.replace(match.group(0), js_array_code + "\n")
-    with open("app.js", "w", encoding="utf-8") as f:
-        f.write(new_content)
-    print("Successfully updated app.js with 180 high-quality questions!")
-else:
-    print("Could not find SEED_REPASO_QUESTIONS pattern in app.js")
+    # Replace SEED_REPASO_QUESTIONS pattern in app.js
+    # The array begins with "const SEED_REPASO_QUESTIONS = [" and ends before "// STATE AND DATABASE MANAGEMENT"
+    pattern = r"const SEED_REPASO_QUESTIONS = \[.*?\];\n"
+    match = re.search(pattern, content, re.DOTALL)
+    if match:
+        new_content = content.replace(match.group(0), js_array_code + "\n")
+        with open("app.js", "w", encoding="utf-8") as f:
+            f.write(new_content)
+        print("Successfully updated app.js with 180 high-quality questions!")
+    else:
+        print("Could not find SEED_REPASO_QUESTIONS pattern in app.js")
+
+if __name__ == "__main__":
+    main()

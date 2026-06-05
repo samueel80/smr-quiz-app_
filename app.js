@@ -1263,15 +1263,39 @@ const SEED_REPASO_QUESTIONS = [
 ];
 
 // STATE AND DATABASE MANAGEMENT
-let db = {
-    questions: [],
-    starred: [], 
-    history: [], 
-    soundEnabled: true,
-    streak: 0,
-    lastStudyDate: null, // YYYY-MM-DD
-    questionStats: {} // normQ -> { attempts: 0, correct: 0 }
-};
+function createDefaultDb() {
+    return {
+        questions: [],
+        starred: [],
+        history: [],
+        soundEnabled: true,
+        streak: 0,
+        lastStudyDate: null, // YYYY-MM-DD
+        questionStats: {}, // normQ -> { attempts: 0, correct: 0 }
+        millionaireWins: 0,
+        millionairePlayed: 0,
+        balance: 0,
+        purchasedThemes: ['classic'],
+        activeTheme: 'classic',
+        purchasedFonts: ['default'],
+        activeFont: 'default',
+        purchasedButtons: ['default'],
+        activeButton: 'default',
+        purchasedPhrases: ['phrase-malaga1'],
+        activePhrase: 'phrase-malaga1',
+        fontSize: 'default',
+        lineHeight: 'default',
+        letterSpacing: 'default',
+        maxReadingWidth: 'default',
+        dyslexiaMode: false,
+        highConcentration: false,
+        intensiveStudy: false,
+        indexPreloaded: false,
+        unlockedAchievements: []
+    };
+}
+
+let db = createDefaultDb();
 
 let session = {
     questions: [],
@@ -1307,13 +1331,20 @@ const ACHIEVEMENTS = [
 ];
 
 
-// Helper: Merges user DB questions with hardcoded seed review questions
+// Helper: Merges user DB questions with hardcoded seed review questions and removes duplicates
 let cachedAllQuestions = null;
 function getAllQuestions() {
     if (cachedAllQuestions) return cachedAllQuestions;
     const qList = Array.isArray(db.questions) ? db.questions : [];
     const oficials = qList.map(q => ({ ...q, source: q.source || 'oficial' }));
-    cachedAllQuestions = [...oficials, ...SEED_REPASO_QUESTIONS];
+    const all = [...oficials, ...SEED_REPASO_QUESTIONS];
+    const seen = new Set();
+    cachedAllQuestions = all.filter((q) => {
+        const key = `${normalizeString(q.question)}|${normalizeString(q.subject || '')}|${normalizeString(q.answer || '')}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
     return cachedAllQuestions;
 }
 
@@ -1694,26 +1725,26 @@ function loadDatabase() {
     const saved = localStorage.getItem('smr_questions_db_pro');
     if (saved) {
         try {
-            db = JSON.parse(saved);
+            db = Object.assign(createDefaultDb(), JSON.parse(saved));
             // Default structures migrations
-            if (!db.questions) db.questions = [];
-            if (!db.starred) db.starred = [];
-            if (!db.history) db.history = [];
-            if (db.soundEnabled === undefined) db.soundEnabled = true;
-            if (db.streak === undefined) db.streak = 0;
+            if (!Array.isArray(db.questions)) db.questions = [];
+            if (!Array.isArray(db.starred)) db.starred = [];
+            if (!Array.isArray(db.history)) db.history = [];
+            if (typeof db.soundEnabled !== 'boolean') db.soundEnabled = true;
+            if (typeof db.streak !== 'number') db.streak = 0;
             if (db.lastStudyDate === undefined) db.lastStudyDate = null;
-            if (db.questionStats === undefined) db.questionStats = {};
-            if (db.indexPreloaded === undefined) db.indexPreloaded = false;
-            if (db.millionaireWins === undefined) db.millionaireWins = 0;
-            if (db.millionairePlayed === undefined) db.millionairePlayed = 0;
-            if (db.balance === undefined) db.balance = 0;
-            if (!db.purchasedThemes) db.purchasedThemes = ['classic'];
+            if (typeof db.questionStats !== 'object' || db.questionStats === null) db.questionStats = {};
+            if (typeof db.indexPreloaded !== 'boolean') db.indexPreloaded = false;
+            if (typeof db.millionaireWins !== 'number') db.millionaireWins = 0;
+            if (typeof db.millionairePlayed !== 'number') db.millionairePlayed = 0;
+            if (typeof db.balance !== 'number') db.balance = 0;
+            if (!Array.isArray(db.purchasedThemes)) db.purchasedThemes = ['classic'];
             if (!db.activeTheme) db.activeTheme = 'classic';
-            if (!db.purchasedFonts) db.purchasedFonts = ['default'];
+            if (!Array.isArray(db.purchasedFonts)) db.purchasedFonts = ['default'];
             if (!db.activeFont) db.activeFont = 'default';
-            if (!db.purchasedButtons) db.purchasedButtons = ['default'];
+            if (!Array.isArray(db.purchasedButtons)) db.purchasedButtons = ['default'];
             if (!db.activeButton) db.activeButton = 'default';
-            if (!db.purchasedPhrases) db.purchasedPhrases = ['phrase-malaga1'];
+            if (!Array.isArray(db.purchasedPhrases)) db.purchasedPhrases = ['phrase-malaga1'];
             if (!db.activePhrase) db.activePhrase = 'phrase-malaga1';
             if (!Array.isArray(db.unlockedAchievements)) {
                 db.unlockedAchievements = [];
@@ -2080,20 +2111,31 @@ function populateSubjectsList() {
 
         let recoveryBadge = '';
         if (sub === 'Empleabilidad I') {
-            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar." style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; font-size: 10px; border-radius: 4px; font-weight: 600; display: inline-block; margin-left: 2px;">⚠️ Solo Recup.</span>`;
+            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar.">⚠️<span class="recovery-tag-text"> Solo Recup.</span></span>`;
         }
 
         card.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                    <span class="subject-card-name" style="font-size: 13px; font-weight: 700; line-height: 1.2;">${sub}</span>
-                    ${recoveryBadge}
-                </div>
-                <span class="subject-card-count" style="font-size: 11px; color: var(--text-muted);">${counts[sub]} preguntas</span>
+            <div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0;">
+                <span class="subject-card-name">${sub}</span>
+                <span class="subject-card-count">${counts[sub]} preguntas</span>
             </div>
-            <div class="subject-mastery-circle" title="Dominio: ${percent}%" style="width: 32px; height: 32px; border-radius: 50%; border: 3px solid ${percent > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'}; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: ${percent > 0 ? 'var(--success)' : 'var(--text-muted)'}; flex-shrink: 0; background: ${percent > 0 ? 'rgba(16, 185, 129, 0.05)' : 'transparent'}; position: relative;">
-                ${percent}%
-                ${percent > 0 ? `<svg style="position: absolute; top: -3px; left: -3px; width: 32px; height: 32px; transform: rotate(-90deg);"><circle cx="16" cy="16" r="14" stroke="var(--success)" stroke-width="3" fill="transparent" stroke-dasharray="88" stroke-dashoffset="${88 - (88 * percent) / 100}" stroke-linecap="round"/></svg>` : ''}
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
+                <div title="Dominio: ${percent}%" style="
+                    min-width: 34px;
+                    height: 20px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 9px;
+                    font-weight: 800;
+                    letter-spacing: 0.3px;
+                    ${percent > 0
+                        ? `background: var(--success-bg, rgba(16,185,129,0.12)); color: var(--success, #10b981); border: 1.5px solid var(--success-border, rgba(16,185,129,0.3));`
+                        : `background: rgba(148,163,184,0.08); color: var(--text-muted); border: 1.5px solid var(--border-color);`
+                    }
+                ">${percent}%</div>
+                ${recoveryBadge}
             </div>
         `;
         card.addEventListener('click', () => {
@@ -2893,9 +2935,11 @@ function renderReviewList(filter) {
             </div>
         `;
 
-        item.querySelector('.star-btn').addEventListener('click', (e) => {
+        const starBtn = item.querySelector('.star-btn');
+        starBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const normQ = normalizeString(q.question);
-            const btn = e.target;
+            const btn = e.currentTarget;
             if (db.starred.includes(normQ)) {
                 db.starred = db.starred.filter(s => s !== normQ);
                 btn.classList.remove('active');
@@ -3025,6 +3069,35 @@ function showScreen(screen) {
     stopSpeaking();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
+    syncMobileBottomNav(screen);
+}
+
+// Sync which bottom-nav button is highlighted
+function syncMobileBottomNav(activeScreen) {
+    const mobileNav = document.getElementById('mobileBottomNav');
+    if (!mobileNav) return;
+
+    const screenToNavId = {
+        'dashboardScreen': 'mobNavDashboard',
+        'studyScreen': 'mobNavStudy',
+        'millionaireScreen': 'mobNavMillionaire',
+        'resultsScreen': 'mobNavDashboard',
+    };
+
+    // Hide nav during active test
+    if (activeScreen && activeScreen.id === 'testScreen') {
+        mobileNav.classList.add('nav-hidden');
+    } else {
+        mobileNav.classList.remove('nav-hidden');
+    }
+
+    // Update active button
+    document.querySelectorAll('.mob-nav-btn').forEach(btn => btn.classList.remove('active'));
+    const navId = activeScreen ? screenToNavId[activeScreen.id] : null;
+    if (navId) {
+        const btn = document.getElementById(navId);
+        if (btn) btn.classList.add('active');
+    }
 }
 
 // Block/Unblock header buttons during active gameplay or tests
@@ -3135,7 +3208,7 @@ function populateMillionaireSubjects() {
         
         let recoveryBadge = '';
         if (sub === 'Empleabilidad I') {
-            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar." style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; font-size: 10px; border-radius: 4px; font-weight: 600; display: inline-block; margin-left: 2px;">⚠️ Solo Recup.</span>`;
+            recoveryBadge = `<span class="recovery-tag" title="Asignatura de 1º curso. Solo aplica a alumnos pendientes de recuperar.">⚠️<span class="recovery-tag-text"> Solo Recup.</span></span>`;
         }
 
         card.innerHTML = `
@@ -4015,6 +4088,83 @@ if (dismissRecBtn) {
         if (recBanner) recBanner.style.display = 'none';
     });
 }
+
+// MOBILE BOTTOM NAV LISTENERS
+(function setupMobileBottomNav() {
+    const mobNavDashboard = document.getElementById('mobNavDashboard');
+    const mobNavStudy = document.getElementById('mobNavStudy');
+    const mobNavStore = document.getElementById('mobNavStore');
+    const mobNavMillionaire = document.getElementById('mobNavMillionaire');
+    const mobNavProfile = document.getElementById('mobNavProfile');
+
+    if (mobNavDashboard) {
+        mobNavDashboard.addEventListener('click', () => {
+            showScreen(dashboardScreen);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    if (mobNavStudy) {
+        mobNavStudy.addEventListener('click', () => {
+            showScreen(studyScreen);
+            populateStudyGuide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    if (mobNavStore) {
+        mobNavStore.addEventListener('click', () => {
+            const storeModal = document.getElementById('storeModal');
+            if (storeModal) {
+                storeModal.style.display = 'flex';
+                if (typeof renderStore === 'function') renderStore();
+                const balLabel = document.getElementById('storeBalanceLabel');
+                if (balLabel) balLabel.textContent = db.balance || 0;
+            }
+        });
+    }
+    if (mobNavMillionaire) {
+        mobNavMillionaire.addEventListener('click', () => {
+            showScreen(millionaireScreen);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    if (mobNavProfile) {
+        mobNavProfile.addEventListener('click', () => {
+            // Scroll to achievements section on dashboard
+            showScreen(dashboardScreen);
+            syncMobileBottomNav(dashboardScreen);
+            // Remove active from dashboard, set profile active
+            document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+            mobNavProfile.classList.add('active');
+            setTimeout(() => {
+                const achievementsCard = document.querySelector('.achievements-card');
+                if (achievementsCard) achievementsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+    }
+})();
+
+// EMPLEABILIDAD ALERT DISMISS
+(function setupEmpleabilidadAlert() {
+    const alert = document.getElementById('empleabilidadAlert');
+    const btn = document.getElementById('dismissEmpleabilidadAlert');
+    if (!alert || !btn) return;
+
+    // Hide if previously dismissed
+    if (localStorage.getItem('empleabilidadAlertDismissed') === '1') {
+        alert.style.display = 'none';
+    }
+
+    btn.addEventListener('click', () => {
+        alert.style.transition = 'opacity 0.25s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+        alert.style.opacity = '0';
+        alert.style.maxHeight = '0';
+        alert.style.marginBottom = '0';
+        alert.style.padding = '0';
+        alert.style.overflow = 'hidden';
+        setTimeout(() => { alert.style.display = 'none'; }, 310);
+        localStorage.setItem('empleabilidadAlertDismissed', '1');
+    });
+})();
 
 // INITIAL STARTUP
 loadDatabase();

@@ -111,9 +111,10 @@
                             <span class="panel-subtitle">Haz clic para marcar. Se muestra tu nivel de dominio 📊</span>
                         </div>
                         
-                        <div class="info-alert-banner" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fecf3e; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; line-height: 1.35; margin-bottom: 12px; display: flex; gap: 8px; align-items: flex-start;">
-                            <span style="font-size: 1rem;">⚠️</span>
-                            <span><strong>Nota del grupo:</strong> La asignatura <strong>Empleabilidad I</strong> es de primer curso. Solo está activada para mí/quienes tengamos que recuperarla del año anterior. Si no es tu caso, no necesitas seleccionarla.</span>
+                        <div id="empleabilidadAlert" class="info-alert-banner" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fecf3e; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; line-height: 1.35; margin-bottom: 12px; display: flex; gap: 8px; align-items: flex-start;">
+                            <span style="font-size: 1rem; flex-shrink: 0;">⚠️</span>
+                            <span style="flex: 1;"><strong>Nota del grupo:</strong> La asignatura <strong>Empleabilidad I</strong> es de primer curso. Solo está activada para mí/quienes tengamos que recuperarla del año anterior. Si no es tu caso, no necesitas seleccionarla.</span>
+                            <button id="dismissEmpleabilidadAlert" title="Ocultar aviso" style="background: none; border: none; color: #fbbf24; cursor: pointer; padding: 2px 4px; font-size: 16px; line-height: 1; flex-shrink: 0; opacity: 0.7; transition: opacity 0.2s; border-radius: 4px;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✕</button>
                         </div>
                         
                         <div id="subjectsGrid" class="subjects-grid">
@@ -493,6 +494,30 @@
                 </div>
         </main>
     </div>
+
+    <!-- MOBILE BOTTOM NAV BAR -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navegación principal">
+        <button class="mob-nav-btn active" id="mobNavDashboard" data-screen="dashboardScreen" aria-label="Inicio">
+            <span class="material-symbols-outlined">home</span>
+            <span class="mob-nav-label">Inicio</span>
+        </button>
+        <button class="mob-nav-btn" id="mobNavStudy" data-screen="studyScreen" aria-label="Guía">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="mob-nav-label">Guía</span>
+        </button>
+        <button class="mob-nav-btn mob-nav-store" id="mobNavStore" aria-label="Tienda">
+            <span class="material-symbols-outlined">storefront</span>
+            <span class="mob-nav-label">Tienda</span>
+        </button>
+        <button class="mob-nav-btn" id="mobNavMillionaire" data-screen="millionaireScreen" aria-label="Millonario">
+            <span class="material-symbols-outlined">workspace_premium</span>
+            <span class="mob-nav-label">Millonario</span>
+        </button>
+        <button class="mob-nav-btn" id="mobNavProfile" aria-label="Perfil">
+            <span class="material-symbols-outlined">emoji_events</span>
+            <span class="mob-nav-label">Logros</span>
+        </button>
+    </nav>
 
     <!-- CUSTOM MODAL CONTAINER -->
     <div id="customModal" class="custom-modal-overlay" style="display: none;">
