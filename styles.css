@@ -696,42 +696,9 @@ body {
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
 }
 
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.control-btn {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: var(--transition);
-}
-
-.control-btn:hover {
-    background: var(--bg-card-hover);
-    transform: translateY(-2px);
-    border-color: var(--primary);
-}
-
-.stats-badge {
-    background: var(--primary-glow);
-    border: 1px solid rgba(99, 102, 241, 0.4);
-    color: #c7d2fe;
-    padding: 6px 10px;
-    border-radius: 50px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+.header-nav-blocked {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
 }
 
 .secondary-btn {
@@ -1934,11 +1901,57 @@ body {
     }
 
     /* ---- MILLONARIO ---- */
-    #millPrizeLadderPanel {
-        max-height: 200px !important;
-    }
     #millionaireGame {
         grid-template-columns: 1fr !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    /* Prize ladder becomes a horizontal scrollable chip strip on mobile */
+    #millPrizeLadderPanel {
+        order: -1; /* Show ABOVE the question panel */
+        max-height: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        padding: 10px 12px !important;
+        align-items: center;
+    }
+    #millPrizeLadderPanel::-webkit-scrollbar { display: none; }
+    /* Hide the desktop "Premios" heading on mobile */
+    #millPrizeLadderPanel > h3 { display: none !important; }
+    /* Each prize row becomes a compact chip */
+    #millPrizeLadderPanel > .mill-prize-row {
+        flex-direction: column !important;
+        flex-shrink: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        min-width: 65px !important;
+        text-align: center !important;
+        font-size: 0.72rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(30, 41, 59, 0.4) !important;
+    }
+    #millPrizeLadderPanel > .mill-prize-row .mill-prize-level {
+        font-size: 0.65rem !important;
+        opacity: 0.8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+    }
+    #millPrizeLadderPanel > .mill-prize-row .mill-prize-amount {
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap;
     }
     #millionaireIntro h2 {
         font-size: 1.7rem !important;
@@ -2040,15 +2053,28 @@ body {
     }
 }
 
-/* Millionaire responsive details */
+/* Millionaire prize ladder — desktop vertical list */
 #millPrizeLadderPanel {
-    max-height: 480px;
+    max-height: 540px;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
 }
-@media (max-width: 768px) {
-    #millPrizeLadderPanel {
-        max-height: 220px;
-    }
+.mill-prize-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+.mill-prize-level {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.mill-prize-amount {
+    white-space: nowrap;
+    text-align: right;
 }/* Custom Modal Overlay */
 .exit-focus-mode-btn {
     position: fixed;
@@ -2149,7 +2175,65 @@ body {
 }
 
 /* --- STORE CUSTOMIZATION THEMES --- */
-/* Modo Concentración Theme */
+
+/* Modo Concentración Básico (GRATIS) — gris-azul suave, sin distracciones */
+body.theme-concentration-basic {
+    --bg-main: #0f1117;
+    --bg-card: #181c27;
+    --bg-card-hover: #1e2334;
+    --border-color: #262d40;
+    --border-glow: rgba(100, 116, 139, 0.25);
+    --primary: #64748b;
+    --primary-hover: #475569;
+    --primary-gradient: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    --success: #22d3ee;
+    --success-bg: rgba(34, 211, 238, 0.07);
+    --success-border: rgba(34, 211, 238, 0.2);
+    --danger: #f87171;
+    --text-main: #cbd5e1;
+    --text-muted: #64748b;
+    --text-glow: #e2e8f0;
+}
+
+/* Modo Concentración PRO ⚡ (DE PAGO) — azul neón de alto contraste con brillo activo */
+body.theme-concentration-pro {
+    --bg-main: #060b18;
+    --bg-card: #0d1629;
+    --bg-card-hover: #152038;
+    --border-color: #1a3055;
+    --border-glow: rgba(59, 130, 246, 0.55);
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    --success: #06b6d4;
+    --success-bg: rgba(6, 182, 212, 0.1);
+    --success-border: rgba(6, 182, 212, 0.35);
+    --danger: #f87171;
+    --text-main: #e0f2fe;
+    --text-muted: #60a5fa;
+    --text-glow: #bfdbfe;
+}
+/* PRO: tarjetas con borde brillante animado */
+body.theme-concentration-pro .panel-card {
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body.theme-concentration-pro .option-item:hover {
+    border-color: rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+}
+body.theme-concentration-pro .option-item.correct {
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+}
+@keyframes pro-border-pulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25); }
+    50%       { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.55), 0 0 20px rgba(59, 130, 246, 0.12); }
+}
+body.theme-concentration-pro #testScreen .panel-card {
+    animation: pro-border-pulse 3s ease-in-out infinite;
+}
+
+/* Modo Concentración (legacy alias — mantiene compatibilidad) */
 body.theme-concentration {
     --bg-main: #0a0f1d;
     --bg-card: #111b2e;
