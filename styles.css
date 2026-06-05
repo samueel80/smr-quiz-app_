@@ -803,6 +803,10 @@ body {
     border-radius: 50px;
     font-size: 14px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 65px;
+    text-align: center;
+    display: inline-block;
 }
 
 .progress-bar-container {
