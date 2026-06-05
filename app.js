@@ -1713,6 +1713,8 @@ function loadDatabase() {
             if (!db.activeFont) db.activeFont = 'default';
             if (!db.purchasedButtons) db.purchasedButtons = ['default'];
             if (!db.activeButton) db.activeButton = 'default';
+            if (!db.purchasedPhrases) db.purchasedPhrases = ['phrase-malaga1'];
+            if (!db.activePhrase) db.activePhrase = 'phrase-malaga1';
             if (!Array.isArray(db.unlockedAchievements)) {
                 db.unlockedAchievements = [];
                 // Quietly pre-populate achievements based on current database stats
@@ -1772,6 +1774,14 @@ function loadDatabase() {
     } else {
         updateDashboardUI();
     }
+    
+    // Night Mode check on load
+    const currentHour = new Date().getHours();
+    if (currentHour >= 20 || currentHour < 6) {
+        setTimeout(() => {
+            showCognitiveRec('theme-night-cognitive', 'Modo Nocturno Cognitivo', 'Es de noche. Para evitar deslumbramiento nocturno y proteger tus ritmos de sueño, sugerimos el Modo Nocturno');
+        }, 1000);
+    }
 }
 
 function saveDatabase() {
@@ -1804,6 +1814,20 @@ function getYesterdayDateString() {
     return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
 }
 
+// Helper: Toggle body scrolling based on open modals
+function updateBodyScroll() {
+    const customModal = document.getElementById('customModal');
+    const storeModal = document.getElementById('storeModal');
+    const isCustomOpen = customModal && customModal.style.display === 'flex';
+    const isStoreOpen = storeModal && storeModal.style.display === 'flex';
+    
+    if (isCustomOpen || isStoreOpen) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+}
+
 // Custom Alerts and Confirms
 function showCustomAlert(title, message, icon = 'info') {
     return new Promise((resolve) => {
@@ -1811,8 +1835,18 @@ function showCustomAlert(title, message, icon = 'info') {
         const iconEl = document.getElementById('customModalIcon');
         const titleEl = document.getElementById('customModalTitle');
         const msgEl = document.getElementById('customModalMessage');
-        const cancelBtn = document.getElementById('customModalCancelBtn');
-        const confirmBtn = document.getElementById('customModalConfirmBtn');
+        
+        let confirmBtn = document.getElementById('customModalConfirmBtn');
+        let cancelBtn = document.getElementById('customModalCancelBtn');
+        
+        // Clone buttons to clear all prior event listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        confirmBtn = newConfirmBtn;
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        cancelBtn = newCancelBtn;
 
         iconEl.textContent = icon;
         titleEl.textContent = title;
@@ -1821,13 +1855,13 @@ function showCustomAlert(title, message, icon = 'info') {
         confirmBtn.textContent = 'Aceptar';
 
         overlay.style.display = 'flex';
+        updateBodyScroll();
 
-        const handleConfirm = () => {
+        confirmBtn.addEventListener('click', () => {
             overlay.style.display = 'none';
-            confirmBtn.removeEventListener('click', handleConfirm);
+            updateBodyScroll();
             resolve(true);
-        };
-        confirmBtn.addEventListener('click', handleConfirm);
+        });
     });
 }
 
@@ -1837,8 +1871,18 @@ function showCustomConfirm(title, message, icon = 'help') {
         const iconEl = document.getElementById('customModalIcon');
         const titleEl = document.getElementById('customModalTitle');
         const msgEl = document.getElementById('customModalMessage');
-        const cancelBtn = document.getElementById('customModalCancelBtn');
-        const confirmBtn = document.getElementById('customModalConfirmBtn');
+        
+        let confirmBtn = document.getElementById('customModalConfirmBtn');
+        let cancelBtn = document.getElementById('customModalCancelBtn');
+        
+        // Clone buttons to clear all prior event listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        confirmBtn = newConfirmBtn;
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        cancelBtn = newCancelBtn;
 
         iconEl.textContent = icon;
         titleEl.textContent = title;
@@ -1848,22 +1892,19 @@ function showCustomConfirm(title, message, icon = 'help') {
         confirmBtn.textContent = 'Aceptar';
 
         overlay.style.display = 'flex';
+        updateBodyScroll();
 
-        const handleConfirm = () => {
+        confirmBtn.addEventListener('click', () => {
             overlay.style.display = 'none';
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
+            updateBodyScroll();
             resolve(true);
-        };
-        const handleCancel = () => {
-            overlay.style.display = 'none';
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
-            resolve(false);
-        };
+        });
 
-        confirmBtn.addEventListener('click', handleConfirm);
-        cancelBtn.addEventListener('click', handleCancel);
+        cancelBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            updateBodyScroll();
+            resolve(false);
+        });
     });
 }
 
@@ -2529,6 +2570,7 @@ startTestBtn.addEventListener('click', () => {
     setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
+    showCognitiveRec('theme-concentration', 'Modo Concentración', 'Para mantener el foco sostenido y evitar distracciones, te sugerimos activar el Modo Concentración');
 });
 
 // QUICK CHALLENGE ⚡
@@ -2556,6 +2598,7 @@ quickChallengeBtn.addEventListener('click', () => {
     setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
+    showCognitiveRec('theme-concentration', 'Modo Concentración', 'Para tests rápidos de alta atención, recomendamos la paleta de alto contraste sin distracciones');
 });
 
 // TIMER
@@ -2817,6 +2860,7 @@ function finishTest() {
     document.querySelector('.score-circle').style.background = `conic-gradient(var(--success) ${percent * 3.6}deg, var(--border-color) 0deg)`;
     renderReviewList('all');
     showScreen(resultsScreen);
+    showCognitiveRec('theme-memory', 'Modo Memoria', 'Para consolidar la memoria visual y repasar fallos con colores funcionales estructurados, sugerimos el Modo Memoria');
 }
 
 function renderReviewList(filter) {
@@ -2880,6 +2924,7 @@ studyGuideBtn.addEventListener('click', () => {
     showScreen(studyScreen);
     populateStudySubjects();
     renderStudyList();
+    showCognitiveRec('theme-reading', 'Modo Lectura Prolongada', 'Para lecturas largas y evitar la fatiga ocular, recomendamos activar un tono cálido de fondo');
 });
 
 backToDashboardBtn.addEventListener('click', () => {
@@ -3449,24 +3494,34 @@ function getPrizeValue(prizeStr) {
 const STORE_PRODUCTS = [
     // Themes
     { id: 'theme-classic', category: 'theme', title: 'Clásico Profesional', desc: 'El tema por defecto de la web en tonos Azul y Rojo.', price: 0 },
-    { id: 'theme-cyber-forest', category: 'theme', title: 'Bosque Cyberpunk 🌲', desc: 'Tema en tonos verde esmeralda y menta.', price: 5000 },
-    { id: 'theme-purple-sunset', category: 'theme', title: 'Atardecer Púrpura 🌌', desc: 'Tema en tonos violeta vibrante y coral.', price: 15000 },
-    { id: 'theme-royal-gold', category: 'theme', title: 'Oro Premium 👑', desc: 'Estética en dorado mate y bronce.', price: 100000 },
-    { id: 'theme-matrix', category: 'theme', title: 'Código Matrix 🟢', desc: 'Siente que hackeas el sistema de preguntas en verde puro.', price: 500000 },
+    { id: 'theme-concentration', category: 'theme', title: 'Modo Concentración 🧠', desc: 'Azules suaves de alto contraste y mínimas distracciones visuales para tests largos.', price: 5000 },
+    { id: 'theme-memory', category: 'theme', title: 'Modo Memoria 💡', desc: 'Usa colores funcionales en respuestas, definiciones y errores para forzar asociaciones visuales.', price: 15000 },
+    { id: 'theme-reading', category: 'theme', title: 'Modo Lectura Prolongada 📖', desc: 'Fondo cálido y contraste suave para reducir fatiga ocular en textos largos.', price: 30000 },
+    { id: 'theme-night-cognitive', category: 'theme', title: 'Modo Nocturno Cognitivo 🌙', desc: 'Fondo azul-gris muy oscuro y letras gris claro que evita el deslumbramiento nocturno.', price: 0 },
+    { id: 'theme-sevilla', category: 'theme', title: 'Sevilla Especial 💃', desc: 'Diseño en carmesí y albero de "Sevilla tiene un color especial".', price: 150000 },
     { id: 'theme-malaga', category: 'theme', title: 'Málaga Especial 🌅', desc: 'Diseño en azul mediterráneo del Málaga pa el mundo.', price: 2000000 },
 
     // Fonts
     { id: 'font-default', category: 'font', title: 'Outfit & Jakarta', desc: 'Tipografía de la interfaz estándar.', price: 0 },
-    { id: 'font-inter', category: 'font', title: 'Inter Moderna', desc: 'Tipografía técnica muy limpia y profesional.', price: 10000 },
-    { id: 'font-playfair', category: 'font', title: 'Playfair Clásica', desc: 'Tipografía elegante con serifa romana.', price: 50000 },
-    { id: 'font-space-mono', category: 'font', title: 'Espacio Mono 💻', desc: 'Tipografía estilo consola de comandos.', price: 200000 },
-    { id: 'font-cinzel', category: 'font', title: 'Cinzel Imperial', desc: 'Estilo clásico imperial para mentes de élite.', price: 1000000 },
+    { id: 'font-inter', category: 'font', title: 'Inter', desc: 'Sans-serif moderna de alta legibilidad en escritorio y móvil.', price: 10000 },
+    { id: 'font-source-sans', category: 'font', title: 'Source Sans 3', desc: 'Legibilidad perfecta en bloques de texto continuo.', price: 25000 },
+    { id: 'font-atkinson', category: 'font', title: 'Atkinson Hyperlegible', desc: 'Diseñada con caracteres claramente diferenciables para facilitar el reconocimiento visual.', price: 50000 },
+    { id: 'font-noto-sans', category: 'font', title: 'Noto Sans', desc: 'Excelente rendimiento y contraste para lectura digital continuada.', price: 100000 },
 
     // Buttons
     { id: 'btn-default', category: 'button', title: 'Botón Redondeado', desc: 'Estilo de botones estándar.', price: 0 },
     { id: 'btn-futuristic', category: 'button', title: 'Botón Futurista', desc: 'Bordes rectos con sombreado de neón sutil.', price: 25000 },
     { id: 'btn-pixel', category: 'button', title: 'Estilo Retro Pixel 👾', desc: 'Botones cuadrados con borde grueso y estilo arcade.', price: 150000 },
-    { id: 'btn-glow', category: 'button', title: 'Ultra Resplandor ✨', desc: 'Botones con animación de pulso luminosa constante.', price: 1000000 }
+    { id: 'btn-glow', category: 'button', title: 'Ultra Resplandor ✨', desc: 'Botones con animación de pulso luminosa constante.', price: 1000000 },
+
+    // Phrases
+    { id: 'phrase-malaga1', category: 'phrase', title: 'de málaga pa el mundo 🌍', desc: 'Lema por defecto de la cabecera.', price: 0 },
+    { id: 'phrase-malaga2', category: 'phrase', title: '🍋 ¡Qué pechá de estudiar! 🍋', desc: 'Lema malagueño para los días de estudio intenso.', price: 10000 },
+    { id: 'phrase-sevilla1', category: 'phrase', title: '💃 Sevilla tiene un color especial 💃', desc: 'Lema de la capital andaluza.', price: 25000 },
+    { id: 'phrase-sevilla2', category: 'phrase', title: '🍊 ¡Mi arma, a por el diez! 🍊', desc: 'Slogan motivador sevillano.', price: 50000 },
+    { id: 'phrase-madrid1', category: 'phrase', title: '🐻 De Madrid al cielo ☁️', desc: 'Lema clásico madrileño.', price: 20000 },
+    { id: 'phrase-madrid2', category: 'phrase', title: '🚇 ¡Qué mazo preguntas! 🚇', desc: 'Expresión típica madrileña para los tests gigantes.', price: 40000 },
+    { id: 'phrase-cesur', category: 'phrase', title: '🎓 Orgullo Cesur 🎓', desc: 'Lema oficial para los alumnos de Cesur.', price: 100000 }
 ];
 
 // Apply Customization Classes to Body
@@ -3484,6 +3539,117 @@ function applyStoreCustomizations() {
     if (db.activeButton && db.activeButton !== 'default') {
         document.body.classList.add(db.activeButton);
     }
+
+    // Apply cognitive/accessibility styles dynamically
+    let styleEl = document.getElementById('cognitiveStyles');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'cognitiveStyles';
+        document.head.appendChild(styleEl);
+    }
+    
+    let stylesText = '';
+    
+    // Dyslexia Mode
+    if (db.dyslexiaMode) {
+        document.body.classList.add('dyslexia-active');
+        stylesText += `
+            body.dyslexia-active {
+                font-family: 'Atkinson Hyperlegible', sans-serif !important;
+                letter-spacing: 0.12em !important;
+                word-spacing: 0.2em !important;
+                line-height: 1.8 !important;
+            }
+            body.dyslexia-active p, body.dyslexia-active span, body.dyslexia-active button, body.dyslexia-active h2 {
+                letter-spacing: 0.12em !important;
+                line-height: 1.8 !important;
+            }
+        `;
+    } else {
+        // Custom sliders values
+        const fSize = db.fontSize || 'default';
+        const lHeight = db.lineHeight || 'default';
+        const lSpacing = db.letterSpacing || 'default';
+        
+        let sizeVal = '15px';
+        if (fSize === 'medium') sizeVal = '17px';
+        else if (fSize === 'large') sizeVal = '19px';
+        else if (fSize === 'xlarge') sizeVal = '21px';
+        
+        let heightVal = '1.6';
+        if (lHeight === 'low') heightVal = '1.3';
+        else if (lHeight === 'high') heightVal = '1.8';
+        else if (lHeight === 'extra') heightVal = '2.0';
+        
+        let spacingVal = 'normal';
+        if (lSpacing === 'wide') spacingVal = '0.5px';
+        else if (lSpacing === 'wider') spacingVal = '1.5px';
+        
+        stylesText += `
+            body, p, span, button {
+                font-size: ${sizeVal} !important;
+                line-height: ${heightVal} !important;
+                letter-spacing: ${spacingVal} !important;
+            }
+        `;
+    }
+    
+    // Max Reading Width
+    const maxWidth = db.maxReadingWidth || 'default';
+    if (maxWidth !== 'default') {
+        stylesText += `
+            .question-container, .study-header-panel, .study-list {
+                max-width: ${maxWidth}px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+        `;
+    }
+    
+    // High Concentration Mode
+    if (db.highConcentration) {
+        document.body.classList.add('high-concentration-active');
+        stylesText += `
+            body.high-concentration-active * {
+                animation: none !important;
+                transition: none !important;
+            }
+            body.high-concentration-active .app-header,
+            body.high-concentration-active .stats-grid,
+            body.high-concentration-active .dashboard-footer-grid {
+                opacity: 0.15;
+                pointer-events: none;
+            }
+            body.high-concentration-active #testScreen {
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+        `;
+    }
+    
+    // Intensive Study Mode
+    if (db.intensiveStudy) {
+        document.body.classList.add('intensive-study-active');
+        stylesText += `
+            body.intensive-study-active .dashboard-footer-grid,
+            body.intensive-study-active .streak-badge,
+            body.intensive-study-active .stats-badge,
+            body.intensive-study-active .glowing-orb {
+                display: none !important;
+            }
+        `;
+    }
+    
+    // Slogan Customization
+    const sloganEl = document.getElementById('customSlogan');
+    if (sloganEl) {
+        const activePhraseObj = STORE_PRODUCTS.find(p => p.id === (db.activePhrase || 'phrase-malaga1'));
+        if (activePhraseObj) {
+            sloganEl.innerHTML = activePhraseObj.title;
+        }
+    }
+    
+    styleEl.textContent = stylesText;
 }
 
 let currentStoreCategory = 'theme';
@@ -3494,6 +3660,133 @@ function renderStore() {
     if (!storeGrid) return;
     storeGrid.innerHTML = '';
     
+    if (currentStoreCategory === 'cognitive') {
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.gap = '15px';
+        wrapper.style.width = '100%';
+        wrapper.style.padding = '5px';
+        
+        // Ensure values are defined
+        if (db.fontSize === undefined) db.fontSize = 'default';
+        if (db.lineHeight === undefined) db.lineHeight = 'default';
+        if (db.letterSpacing === undefined) db.letterSpacing = 'default';
+        if (db.maxReadingWidth === undefined) db.maxReadingWidth = 'default';
+        
+        wrapper.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; text-align: left;">
+                <h4 style="margin: 0; color: white;">Ajustes de Lectura</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tamaño de Texto:</label>
+                        <select id="selectFontSize" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                            <option value="default" ${db.fontSize === 'default' ? 'selected' : ''}>Estándar (15px)</option>
+                            <option value="medium" ${db.fontSize === 'medium' ? 'selected' : ''}>Mediano (17px)</option>
+                            <option value="large" ${db.fontSize === 'large' ? 'selected' : ''}>Grande (19px)</option>
+                            <option value="xlarge" ${db.fontSize === 'xlarge' ? 'selected' : ''}>Extra Grande (21px)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Altura de Línea:</label>
+                        <select id="selectLineHeight" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                            <option value="default" ${db.lineHeight === 'default' ? 'selected' : ''}>Estándar (1.6)</option>
+                            <option value="low" ${db.lineHeight === 'low' ? 'selected' : ''}>Baja (1.3)</option>
+                            <option value="high" ${db.lineHeight === 'high' ? 'selected' : ''}>Alta (1.8)</option>
+                            <option value="extra" ${db.lineHeight === 'extra' ? 'selected' : ''}>Extra (2.0)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Espaciado de Letras:</label>
+                        <select id="selectLetterSpacing" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                            <option value="default" ${db.letterSpacing === 'default' ? 'selected' : ''}>Estándar</option>
+                            <option value="wide" ${db.letterSpacing === 'wide' ? 'selected' : ''}>Ancho (+0.5px)</option>
+                            <option value="wider" ${db.letterSpacing === 'wider' ? 'selected' : ''}>Muy Ancho (+1.5px)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ancho Máx. Lectura:</label>
+                        <select id="selectMaxWidth" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                            <option value="default" ${db.maxReadingWidth === 'default' ? 'selected' : ''}>Estándar (Completo)</option>
+                            <option value="600" ${db.maxReadingWidth === '600' ? 'selected' : ''}>Estrecho (600px)</option>
+                            <option value="700" ${db.maxReadingWidth === '700' ? 'selected' : ''}>Medio (700px)</option>
+                            <option value="800" ${db.maxReadingWidth === '800' ? 'selected' : ''}>Ancho (800px)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                <h4 style="margin: 0; color: white;">Optimizaciones Cognitivas</h4>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Modo Alta Concentración</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Reduce animaciones y destaca la pregunta activa reduciendo el brillo de otros paneles.</span>
+                    </div>
+                    <input type="checkbox" id="chkHighConcentration" ${db.highConcentration ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Adaptación para Dislexia</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Aplica tipografía Atkinson Hyperlegible con mayor espaciado de caracteres para evitar rotación visual.</span>
+                    </div>
+                    <input type="checkbox" id="chkDyslexia" ${db.dyslexiaMode ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="flex: 1;">
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Modo Estudio Intensivo</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Oculta widgets de estadísticas y rachas para liberar la carga cognitiva visual durante el estudio.</span>
+                    </div>
+                    <input type="checkbox" id="chkIntensiveStudy" ${db.intensiveStudy ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                </div>
+            </div>
+        `;
+        
+        storeGrid.appendChild(wrapper);
+        
+        // Bind changes
+        document.getElementById('selectFontSize').addEventListener('change', (e) => {
+            db.fontSize = e.target.value;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('selectLineHeight').addEventListener('change', (e) => {
+            db.lineHeight = e.target.value;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('selectLetterSpacing').addEventListener('change', (e) => {
+            db.letterSpacing = e.target.value;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('selectMaxWidth').addEventListener('change', (e) => {
+            db.maxReadingWidth = e.target.value;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('chkHighConcentration').addEventListener('change', (e) => {
+            db.highConcentration = e.target.checked;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('chkDyslexia').addEventListener('change', (e) => {
+            db.dyslexiaMode = e.target.checked;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        document.getElementById('chkIntensiveStudy').addEventListener('change', (e) => {
+            db.intensiveStudy = e.target.checked;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+        
+        return;
+    }
+
     const filtered = STORE_PRODUCTS.filter(p => p.category === currentStoreCategory);
     
     filtered.forEach(p => {
@@ -3512,6 +3805,9 @@ function renderStore() {
         } else if (p.category === 'button') {
             isPurchased = db.purchasedButtons.includes(p.id);
             isActive = db.activeButton === p.id || (p.id === 'btn-default' && db.activeButton === 'default');
+        } else if (p.category === 'phrase') {
+            isPurchased = db.purchasedPhrases.includes(p.id);
+            isActive = db.activePhrase === p.id;
         }
         
         let btnText = 'Comprar';
@@ -3555,6 +3851,8 @@ function handleStoreAction(product, isPurchased) {
             db.activeFont = product.id === 'font-default' ? 'default' : product.id;
         } else if (product.category === 'button') {
             db.activeButton = product.id === 'btn-default' ? 'default' : product.id;
+        } else if (product.category === 'phrase') {
+            db.activePhrase = product.id;
         }
         saveDatabase();
         applyStoreCustomizations();
@@ -3576,6 +3874,8 @@ function handleStoreAction(product, isPurchased) {
                     db.purchasedFonts.push(product.id);
                 } else if (product.category === 'button') {
                     db.purchasedButtons.push(product.id);
+                } else if (product.category === 'phrase') {
+                    db.purchasedPhrases.push(product.id);
                 }
                 saveDatabase();
                 renderStore();
@@ -3594,6 +3894,7 @@ const closeStoreBtn = document.getElementById('closeStoreBtn');
 function openStore() {
     if (storeModal) {
         storeModal.style.display = 'flex';
+        updateBodyScroll();
         currentStoreCategory = 'theme';
         // Reset tab buttons state
         document.querySelectorAll('#storeTabs .chip-btn').forEach(btn => {
@@ -3612,6 +3913,15 @@ if (openStoreBtn) {
 if (closeStoreBtn && storeModal) {
     closeStoreBtn.addEventListener('click', () => {
         storeModal.style.display = 'none';
+        updateBodyScroll();
+    });
+}
+if (storeModal) {
+    storeModal.addEventListener('click', (e) => {
+        if (e.target === storeModal) {
+            storeModal.style.display = 'none';
+            updateBodyScroll();
+        }
     });
 }
 
@@ -3647,6 +3957,7 @@ if (devTrigger) {
                 if (p.category === 'theme' && !db.purchasedThemes.includes(p.id)) db.purchasedThemes.push(p.id);
                 if (p.category === 'font' && !db.purchasedFonts.includes(p.id)) db.purchasedFonts.push(p.id);
                 if (p.category === 'button' && !db.purchasedButtons.includes(p.id)) db.purchasedButtons.push(p.id);
+                if (p.category === 'phrase' && !db.purchasedPhrases.includes(p.id)) db.purchasedPhrases.push(p.id);
             });
             saveDatabase();
             applyStoreCustomizations();
@@ -3654,6 +3965,54 @@ if (devTrigger) {
             startConfetti();
             showCustomAlert('🛠️ MODO DESARROLLADOR 🛠️', '¡Easter Egg activado! Has obtenido 5.000.000 € virtuales y has desbloqueado toda la tienda de personalización de Málaga para el mundo.', 'terminal');
         }
+    });
+}
+
+// COGNITIVE RECOMMENDATION SYSTEM
+let pendingRecThemeId = null;
+
+function showCognitiveRec(themeId, themeName, reason) {
+    const banner = document.getElementById('cognitiveRecBanner');
+    const textEl = document.getElementById('cognitiveRecText');
+    if (!banner || !textEl) return;
+    
+    // If the theme is already active, don't recommend it
+    if (db.activeTheme === themeId || (themeId === 'theme-classic' && db.activeTheme === 'classic')) {
+        return;
+    }
+    
+    pendingRecThemeId = themeId;
+    textEl.innerHTML = `💡 <strong>Recomendación cognitiva:</strong> ${reason}. ¿Deseas activar el <strong>${themeName}</strong>?`;
+    banner.style.display = 'flex';
+}
+
+// Bind recommendation buttons
+const acceptRecBtn = document.getElementById('acceptCognitiveRecBtn');
+const dismissRecBtn = document.getElementById('dismissCognitiveRecBtn');
+const recBanner = document.getElementById('cognitiveRecBanner');
+
+if (acceptRecBtn) {
+    acceptRecBtn.addEventListener('click', () => {
+        if (pendingRecThemeId) {
+            db.activeTheme = pendingRecThemeId;
+            // Ensure recommended theme is in purchased list (accessible/free gift)
+            if (!db.purchasedThemes.includes(pendingRecThemeId)) {
+                db.purchasedThemes.push(pendingRecThemeId);
+            }
+            saveDatabase();
+            applyStoreCustomizations();
+            if (typeof renderStore === 'function') {
+                renderStore();
+            }
+            showToast('Tema Recomendado Aplicado 🧠', `Se ha activado el tema de forma óptima para tu sesión actual.`, 'palette', 'success');
+        }
+        if (recBanner) recBanner.style.display = 'none';
+    });
+}
+
+if (dismissRecBtn) {
+    dismissRecBtn.addEventListener('click', () => {
+        if (recBanner) recBanner.style.display = 'none';
     });
 }
 

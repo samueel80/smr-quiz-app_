@@ -463,7 +463,7 @@ body {
 }
 
 .chip-btn {
-    background: rgba(30, 41, 59, 0.4);
+    background: var(--bg-card-hover);
     border: 1px solid var(--border-color);
     color: var(--text-main);
     padding: 10px 16px;
@@ -1714,11 +1714,14 @@ body {
     padding: 20px;
     animation: modal-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+#customModal {
+    z-index: 12000 !important;
+}
 .custom-modal-content {
-    background: rgba(30, 41, 59, 0.85);
+    background: var(--bg-card);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     max-width: 450px;
@@ -1758,71 +1761,75 @@ body {
 }
 
 /* --- STORE CUSTOMIZATION THEMES --- */
-/* Cyber Forest Theme */
-body.theme-cyber-forest {
-    --bg-main: #062f22;
-    --bg-card: #064e3b;
-    --bg-card-hover: #047857;
-    --border-color: #047857;
-    --border-glow: rgba(16, 185, 129, 0.4);
-    --primary: #10b981;
-    --primary-hover: #059669;
-    --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --success: #34d399;
-    --success-bg: rgba(52, 211, 153, 0.1);
-    --success-border: rgba(52, 211, 153, 0.3);
+/* Modo Concentración Theme */
+body.theme-concentration {
+    --bg-main: #0a0f1d;
+    --bg-card: #111b2e;
+    --bg-card-hover: #19273f;
+    --border-color: #1e304f;
+    --border-glow: rgba(59, 130, 246, 0.3);
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --success: #3b82f6;
+    --success-bg: rgba(59, 130, 246, 0.08);
+    --success-border: rgba(59, 130, 246, 0.25);
     --danger: #ef4444;
 }
 
-/* Purple Sunset Theme */
-body.theme-purple-sunset {
-    --bg-main: #1e1b4b;
-    --bg-card: #312e81;
-    --bg-card-hover: #4338ca;
-    --border-color: #4338ca;
-    --border-glow: rgba(139, 92, 246, 0.4);
+/* Modo Memoria Theme */
+body.theme-memory {
+    --bg-main: #0d121f;
+    --bg-card: #161e31;
+    --bg-card-hover: #212c47;
+    --border-color: #273554;
+    --border-glow: rgba(139, 92, 246, 0.3);
     --primary: #8b5cf6;
     --primary-hover: #7c3aed;
     --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    --success: #ec4899;
-    --success-bg: rgba(236, 72, 153, 0.1);
-    --success-border: rgba(236, 72, 153, 0.3);
-    --danger: #f43f5e;
-}
-
-/* Royal Gold Theme */
-body.theme-royal-gold {
-    --bg-main: #1c1917;
-    --bg-card: #292524;
-    --bg-card-hover: #44403c;
-    --border-color: #44403c;
-    --border-glow: rgba(217, 119, 6, 0.4);
-    --primary: #d97706;
-    --primary-hover: #b45309;
-    --primary-gradient: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-    --success: #eab308;
-    --success-bg: rgba(234, 179, 8, 0.1);
-    --success-border: rgba(234, 179, 8, 0.3);
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.08);
+    --success-border: rgba(16, 185, 129, 0.25);
     --danger: #ef4444;
+    --warning: #f59e0b;
 }
 
-/* Matrix (Retro Hacker) Theme */
-body.theme-matrix {
-    --bg-main: #000000;
-    --bg-card: #0c0c0c;
-    --bg-card-hover: #1a1a1a;
-    --border-color: #00ff00;
-    --border-glow: rgba(0, 255, 0, 0.5);
-    --primary: #00ff00;
-    --primary-hover: #00dd00;
-    --primary-gradient: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
-    --success: #00ff00;
-    --success-bg: rgba(0, 255, 0, 0.08);
-    --success-border: rgba(0, 255, 0, 0.3);
-    --danger: #ff0000;
-    --text-main: #00ff00;
-    --text-muted: #008800;
-    --text-glow: #00ff00;
+/* Modo Lectura Prolongada (Sepia) Theme */
+body.theme-reading {
+    --bg-main: #f3ece0;
+    --bg-card: #faf6ee;
+    --bg-card-hover: #ede3d3;
+    --border-color: #dfd2be;
+    --border-glow: rgba(139, 92, 26, 0.2);
+    --primary: #8b5a2b;
+    --primary-hover: #6f4720;
+    --primary-gradient: linear-gradient(135deg, #8b5a2b 0%, #6f4720 100%);
+    --success: #0284c7;
+    --success-bg: rgba(2, 132, 199, 0.08);
+    --success-border: rgba(2, 132, 199, 0.25);
+    --danger: #b91c1c;
+    --text-main: #2b251f;
+    --text-muted: #736757;
+    --text-glow: #1a1612;
+}
+
+/* Modo Nocturno Cognitivo Theme */
+body.theme-night-cognitive {
+    --bg-main: #0c0f16;
+    --bg-card: #141923;
+    --bg-card-hover: #1c2331;
+    --border-color: #1c2331;
+    --border-glow: rgba(148, 163, 184, 0.15);
+    --primary: #475569;
+    --primary-hover: #334155;
+    --primary-gradient: linear-gradient(135deg, #475569 0%, #334155 100%);
+    --success: #3b82f6;
+    --success-bg: rgba(59, 130, 246, 0.06);
+    --success-border: rgba(59, 130, 246, 0.2);
+    --danger: #ef4444;
+    --text-main: #cbd5e1;
+    --text-muted: #64748b;
+    --text-glow: #e2e8f0;
 }
 
 /* Málaga Edición Especial Theme */
@@ -1841,6 +1848,25 @@ body.theme-malaga {
     --danger: #ef4444;
 }
 
+/* Sevilla Especial Theme */
+body.theme-sevilla {
+    --bg-main: #f5eedc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #faeed1;
+    --border-color: #dcb386;
+    --border-glow: rgba(186, 12, 47, 0.4);
+    --primary: #ba0c2f;
+    --primary-hover: #8a0620;
+    --primary-gradient: linear-gradient(135deg, #ba0c2f 0%, #d82a43 100%);
+    --success: #007a33;
+    --success-bg: rgba(0, 122, 51, 0.08);
+    --success-border: rgba(0, 122, 51, 0.25);
+    --danger: #d00000;
+    --text-main: #2b1704;
+    --text-muted: #6e4e37;
+    --text-glow: #2b1704;
+}
+
 /* --- FONTS --- */
 body.font-inter {
     font-family: 'Inter', sans-serif !important;
@@ -1849,25 +1875,25 @@ body.font-inter h1, body.font-inter h2, body.font-inter h3, body.font-inter h4 {
     font-family: 'Inter', sans-serif !important;
 }
 
-body.font-playfair {
-    font-family: 'Playfair Display', serif !important;
+body.font-source-sans {
+    font-family: 'Source Sans 3', sans-serif !important;
 }
-body.font-playfair h1, body.font-playfair h2, body.font-playfair h3, body.font-playfair h4 {
-    font-family: 'Playfair Display', serif !important;
-}
-
-body.font-space-mono {
-    font-family: 'Space Mono', monospace !important;
-}
-body.font-space-mono h1, body.font-space-mono h2, body.font-space-mono h3, body.font-space-mono h4 {
-    font-family: 'Space Mono', monospace !important;
+body.font-source-sans h1, body.font-source-sans h2, body.font-source-sans h3, body.font-source-sans h4 {
+    font-family: 'Source Sans 3', sans-serif !important;
 }
 
-body.font-cinzel {
-    font-family: 'Cinzel', serif !important;
+body.font-atkinson {
+    font-family: 'Atkinson Hyperlegible', sans-serif !important;
 }
-body.font-cinzel h1, body.font-cinzel h2, body.font-cinzel h3, body.font-cinzel h4 {
-    font-family: 'Cinzel', serif !important;
+body.font-atkinson h1, body.font-atkinson h2, body.font-atkinson h3, body.font-atkinson h4 {
+    font-family: 'Atkinson Hyperlegible', sans-serif !important;
+}
+
+body.font-noto-sans {
+    font-family: 'Noto Sans', sans-serif !important;
+}
+body.font-noto-sans h1, body.font-noto-sans h2, body.font-noto-sans h3, body.font-noto-sans h4 {
+    font-family: 'Noto Sans', sans-serif !important;
 }
 
 /* --- BUTTONS --- */
@@ -1908,7 +1934,7 @@ body.btn-glow .btn {
     padding-right: 6px;
 }
 .store-item {
-    background: rgba(30, 41, 59, 0.4);
+    background: var(--bg-card-hover);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 16px;

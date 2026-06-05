@@ -7,7 +7,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700&family=Space+Mono:wght@400;700&family=Cinzel:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@400;600;700&family=Source+Sans+3:wght@300;400;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -31,7 +31,7 @@
                         SMR <span style="background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Plan de Estudios</span>
                     </h1>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                        <span style="font-size: 9.5px; color: #ef4444; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">de málaga pa el mundo 🌍</span>
+                        <span id="customSlogan" style="font-size: 9.5px; color: #ef4444; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">de málaga pa el mundo 🌍</span>
                         <span style="width: 3px; height: 3px; background: var(--text-muted); border-radius: 50%;"></span>
                         <span style="font-size: 9.5px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.2px;">Web administrada gratuita por alumno de Cesur añadida a plan de estudio para exámenes</span>
                     </div>
@@ -55,6 +55,18 @@
                 </div>
             </div>
         </header>
+
+        <!-- COGNITIVE RECOMMENDATION BANNER -->
+        <div id="cognitiveRecBanner" style="display: none; width: 100%; max-width: 1200px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.25); border-radius: var(--radius-sm); padding: 8px 14px; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; margin-top: -6px; margin-bottom: 12px; z-index: 100;">
+            <div style="display: flex; align-items: center; gap: 8px; text-align: left;">
+                <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 20px; flex-shrink: 0;">psychology</span>
+                <span id="cognitiveRecText" style="font-size: 0.8rem; color: var(--text-main); font-weight: 500;">Sugerencia de aprendizaje...</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                <button id="acceptCognitiveRecBtn" class="btn primary-btn" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 4px; line-height: 1.2;">Aplicar</button>
+                <button id="dismissCognitiveRecBtn" class="btn secondary-btn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; line-height: 1.2;">Descartar</button>
+            </div>
+        </div>
 
         <main class="app-main">
             <!-- PANTALLA 1: DASHBOARD -->
@@ -524,6 +536,12 @@
                     </button>
                     <button class="chip-btn" data-category="button" style="padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
                         <span class="material-symbols-outlined" style="font-size: 16px;">smart_button</span> Botones
+                    </button>
+                    <button class="chip-btn" data-category="cognitive" style="padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">psychology</span> Ajustes Cognitivos
+                    </button>
+                    <button class="chip-btn" data-category="phrase" style="padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">edit_note</span> Lemas
                     </button>
                 </div>
                 
