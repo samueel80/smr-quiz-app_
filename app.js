@@ -1493,20 +1493,59 @@ function animateConfetti() {
 
 // Text-to-Speech Engine
 let currentUtterance = null;
-function speakText(text) {
+let activeSpeakBtn = null;
+function resetSpeakActiveBtn() {
+    if (typeof speakActiveBtn !== 'undefined' && speakActiveBtn) {
+        speakActiveBtn.classList.remove('speaking');
+        const iconSpan = speakActiveBtn.querySelector('.material-symbols-outlined');
+        if (iconSpan) iconSpan.textContent = 'record_voice_over';
+        speakActiveBtn.title = "Escuchar pregunta en voz alta";
+    }
+}
+function speakText(text, onEndCallback) {
     if ('speechSynthesis' in window) {
+        if (currentUtterance) {
+            currentUtterance.onend = null;
+            currentUtterance.onerror = null;
+        }
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'es-ES';
         utterance.rate = 1.05;
+        
+        utterance.onend = () => {
+            currentUtterance = null;
+            if (onEndCallback) onEndCallback();
+        };
+        utterance.onerror = () => {
+            currentUtterance = null;
+            if (onEndCallback) onEndCallback();
+        };
+        
         window.speechSynthesis.speak(utterance);
         currentUtterance = utterance;
     }
 }
+function resetAllStudySpeakBtns() {
+    document.querySelectorAll('.study-speak-btn').forEach(btn => {
+        btn.classList.remove('speaking');
+        const iconSpan = btn.querySelector('.material-symbols-outlined');
+        if (iconSpan) iconSpan.textContent = 'record_voice_over';
+        btn.title = "Escuchar pregunta";
+    });
+}
 function stopSpeaking() {
+    if (currentUtterance) {
+        currentUtterance.onend = null;
+        currentUtterance.onerror = null;
+        currentUtterance = null;
+    }
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
     }
+    activeSpeakBtn = null;
+    resetSpeakActiveBtn();
+    resetAllStudySpeakBtns();
 }
 
 // Hint Generator
@@ -1555,6 +1594,7 @@ const soundIcon = document.getElementById('soundIcon');
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const clearDatabaseBtn = document.getElementById('clearDatabaseBtn');
+const clearStoreBtn = document.getElementById('clearStoreBtn');
 
 // Dashboard Stats
 const subjectsCount = document.getElementById('subjectsCount');
@@ -2092,6 +2132,10 @@ function updateDashboardUI() {
     totalQuestionsCount.textContent = totalList.length;
     starredCount.textContent = db.starred.length;
     soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
+    const soundText = document.getElementById('soundText');
+    if (soundText) {
+        soundText.textContent = db.soundEnabled ? "Sonido" : "Silencio";
+    }
     streakCount.textContent = db.streak;
     
     const balanceCount = document.getElementById('balanceCount');
@@ -2337,25 +2381,99 @@ document.querySelectorAll('#sourceChips .chip-btn').forEach(btn => {
 soundToggleBtn.addEventListener('click', () => {
     db.soundEnabled = !db.soundEnabled;
     soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
+    const soundText = document.getElementById('soundText');
+    if (soundText) {
+        soundText.textContent = db.soundEnabled ? "Sonido" : "Silencio";
+    }
     saveDatabase();
 });
 
 clearDatabaseBtn.addEventListener('click', () => {
     showCustomConfirm('Eliminar Base de Datos', '¿Seguro que deseas eliminar todas las preguntas importadas y restaurar estadísticas?', 'delete_forever').then(confirmed => {
         if (confirmed) {
-            db = {
-                questions: [],
-                starred: [],
-                history: [],
-                soundEnabled: true,
-                streak: 0,
-                lastStudyDate: null,
-                questionStats: {},
-                millionaireWins: 0,
-                millionairePlayed: 0,
-                unlockedAchievements: []
-            };
+            // Keep shop balance, achievements, and purchased customizations
+            const savedBalance = db.balance || 0;
+            const savedThemes = db.purchasedThemes || ['classic'];
+            const savedActiveTheme = db.activeTheme || 'classic';
+            const savedFonts = db.purchasedFonts || ['default'];
+            const savedActiveFont = db.activeFont || 'default';
+            const savedButtons = db.purchasedButtons || ['default'];
+            const savedActiveButton = db.activeButton || 'default';
+            const savedPhrases = db.purchasedPhrases || ['phrase-malaga1'];
+            const savedActivePhrase = db.activePhrase || 'phrase-malaga1';
+            const savedFontSize = db.fontSize || 'default';
+            const savedLineHeight = db.lineHeight || 'default';
+            const savedLetterSpacing = db.letterSpacing || 'default';
+            const savedMaxReadingWidth = db.maxReadingWidth || 'default';
+            const savedDyslexiaMode = db.dyslexiaMode || false;
+            const savedHighConcentration = db.highConcentration || false;
+            const savedIntensiveStudy = db.intensiveStudy || false;
+            const savedAchievements = db.unlockedAchievements || [];
+
+            // Reset only study records and statistics
+            db = createDefaultDb();
+            
+            // Restore shop state
+            db.balance = savedBalance;
+            db.purchasedThemes = savedThemes;
+            db.activeTheme = savedActiveTheme;
+            db.purchasedFonts = savedFonts;
+            db.activeFont = savedActiveFont;
+            db.purchasedButtons = savedButtons;
+            db.activeButton = savedActiveButton;
+            db.purchasedPhrases = savedPhrases;
+            db.activePhrase = savedActivePhrase;
+            db.fontSize = savedFontSize;
+            db.lineHeight = savedLineHeight;
+            db.letterSpacing = savedLetterSpacing;
+            db.maxReadingWidth = savedMaxReadingWidth;
+            db.dyslexiaMode = savedDyslexiaMode;
+            db.highConcentration = savedHighConcentration;
+            db.intensiveStudy = savedIntensiveStudy;
+            db.unlockedAchievements = savedAchievements;
+
             saveDatabase();
+            syncDatabaseWithFile();
+            applyStoreCustomizations();
+            updateDashboardUI();
+            if (typeof renderStore === 'function') renderStore();
+        }
+    });
+});
+
+clearStoreBtn.addEventListener('click', () => {
+    showCustomConfirm('Restablecer Tienda y Saldo', '¿Seguro que deseas volver tu saldo a 0 €, bloquear todos los temas de la tienda y reiniciar tus logros? Tu progreso de estudio y favoritos no se verán afectados.', 'shopping_bag').then(confirmed => {
+        if (confirmed) {
+            // Keep study questions, stats, and records
+            const savedQuestions = db.questions || [];
+            const savedStarred = db.starred || [];
+            const savedHistory = db.history || [];
+            const savedStreak = db.streak || 0;
+            const savedLastStudyDate = db.lastStudyDate || null;
+            const savedQuestionStats = db.questionStats || {};
+            const savedPlayed = db.millionairePlayed || 0;
+            const savedWins = db.millionaireWins || 0;
+
+            // Reset only shop balance, purchases, and achievements
+            db = createDefaultDb();
+
+            // Restore study state
+            db.questions = savedQuestions;
+            db.starred = savedStarred;
+            db.history = savedHistory;
+            db.streak = savedStreak;
+            db.lastStudyDate = savedLastStudyDate;
+            db.questionStats = savedQuestionStats;
+            db.millionairePlayed = savedPlayed;
+            db.millionaireWins = savedWins;
+
+            saveDatabase();
+            applyStoreCustomizations();
+            updateDashboardUI();
+            if (typeof renderStore === 'function') renderStore();
+            if (typeof renderAchievements === 'function') renderAchievements();
+            
+            showCustomAlert('Tienda Restablecida', 'Tu saldo se ha devuelto a 0 € y todas tus compras se han restablecido.', 'success');
         }
     });
 });
@@ -2905,13 +3023,32 @@ finishBtn.addEventListener('click', () => {
     }
 });
 speakActiveBtn.addEventListener('click', () => {
+    if (activeSpeakBtn === speakActiveBtn) {
+        stopSpeaking();
+        return;
+    }
+
+    stopSpeaking();
+
     const q = session.questions[session.currentIndex];
     if (!q) return;
     let textToSpeak = `${q.question}. `;
     q.shuffledOptions.forEach((opt, idx) => {
         textToSpeak += `Opción ${idx + 1}: ${opt}. `;
     });
-    speakText(textToSpeak);
+
+    const iconSpan = speakActiveBtn.querySelector('.material-symbols-outlined');
+    if (iconSpan) iconSpan.textContent = 'voice_over_off';
+    speakActiveBtn.title = "Parar audio";
+    speakActiveBtn.classList.add('speaking');
+    activeSpeakBtn = speakActiveBtn;
+
+    speakText(textToSpeak, () => {
+        if (activeSpeakBtn === speakActiveBtn) {
+            activeSpeakBtn = null;
+        }
+        resetSpeakActiveBtn();
+    });
 });
 exitTestBtn.addEventListener('click', () => {
     showCustomConfirm('Salir del Test', '¿Estás seguro de que deseas salir del test? Tu progreso actual se perderá.', 'warning').then(confirmed => {
@@ -3108,7 +3245,7 @@ function renderStudyList() {
         card.innerHTML = `
             <div class="study-card-q">
                 <span>${q.question}</span>
-                <button class="study-speak-btn" title="Escuchar pregunta" style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0 4px; color: var(--text-muted); transition: color 0.2s;">🔊</button>
+                <button class="study-speak-btn" title="Escuchar pregunta" style="background: none; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; color: var(--text-muted); transition: color 0.2s;"><span class="material-symbols-outlined" style="font-size: 18px;">record_voice_over</span></button>
             </div>
             <ul class="study-card-options">
                 ${optionsHTML}
@@ -3124,11 +3261,32 @@ function renderStudyList() {
         const speakBtn = card.querySelector('.study-speak-btn');
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (activeSpeakBtn === speakBtn) {
+                stopSpeaking();
+                return;
+            }
+
+            stopSpeaking();
+
             let textToSpeak = `${q.question}. `;
             q.options.forEach((opt, idx) => {
                 textToSpeak += `Opción ${idx + 1}: ${opt}. `;
             });
-            speakText(textToSpeak);
+
+            const iconSpan = speakBtn.querySelector('.material-symbols-outlined');
+            if (iconSpan) iconSpan.textContent = 'voice_over_off';
+            speakBtn.title = "Parar audio";
+            speakBtn.classList.add('speaking');
+            activeSpeakBtn = speakBtn;
+
+            speakText(textToSpeak, () => {
+                if (activeSpeakBtn === speakBtn) {
+                    activeSpeakBtn = null;
+                }
+                if (iconSpan) iconSpan.textContent = 'record_voice_over';
+                speakBtn.title = "Escuchar pregunta";
+                speakBtn.classList.remove('speaking');
+            });
         });
 
         if (q.source === 'repaso') {
@@ -3874,11 +4032,11 @@ function renderStore() {
         
         wrapper.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; text-align: left;">
-                <h4 style="margin: 0; color: white;">Ajustes de Lectura</h4>
+                <h4 style="margin: 0; color: white; font-family: var(--font-heading); font-size: 0.95rem; margin-bottom: 4px;">Ajustes de Lectura</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tamaño de Texto:</label>
-                        <select id="selectFontSize" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tamaño de Texto:</label>
+                        <select id="selectFontSize" class="store-select-custom">
                             <option value="default" ${db.fontSize === 'default' ? 'selected' : ''}>Estándar (15px)</option>
                             <option value="medium" ${db.fontSize === 'medium' ? 'selected' : ''}>Mediano (17px)</option>
                             <option value="large" ${db.fontSize === 'large' ? 'selected' : ''}>Grande (19px)</option>
@@ -3886,8 +4044,8 @@ function renderStore() {
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Altura de Línea:</label>
-                        <select id="selectLineHeight" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Altura de Línea:</label>
+                        <select id="selectLineHeight" class="store-select-custom">
                             <option value="default" ${db.lineHeight === 'default' ? 'selected' : ''}>Estándar (1.6)</option>
                             <option value="low" ${db.lineHeight === 'low' ? 'selected' : ''}>Baja (1.3)</option>
                             <option value="high" ${db.lineHeight === 'high' ? 'selected' : ''}>Alta (1.8)</option>
@@ -3895,16 +4053,16 @@ function renderStore() {
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Espaciado de Letras:</label>
-                        <select id="selectLetterSpacing" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Espaciado de Letras:</label>
+                        <select id="selectLetterSpacing" class="store-select-custom">
                             <option value="default" ${db.letterSpacing === 'default' ? 'selected' : ''}>Estándar</option>
                             <option value="wide" ${db.letterSpacing === 'wide' ? 'selected' : ''}>Ancho (+0.5px)</option>
                             <option value="wider" ${db.letterSpacing === 'wider' ? 'selected' : ''}>Muy Ancho (+1.5px)</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ancho Máx. Lectura:</label>
-                        <select id="selectMaxWidth" class="btn secondary-btn" style="width: 100%; padding: 6px; font-size: 0.8rem; background: var(--bg-card); color: white;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ancho Máx. Lectura:</label>
+                        <select id="selectMaxWidth" class="store-select-custom">
                             <option value="default" ${db.maxReadingWidth === 'default' ? 'selected' : ''}>Estándar (Completo)</option>
                             <option value="600" ${db.maxReadingWidth === '600' ? 'selected' : ''}>Estrecho (600px)</option>
                             <option value="700" ${db.maxReadingWidth === '700' ? 'selected' : ''}>Medio (700px)</option>
@@ -3914,31 +4072,40 @@ function renderStore() {
                 </div>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
-                <h4 style="margin: 0; color: white;">Optimizaciones Cognitivas</h4>
+            <div style="display: flex; flex-direction: column; gap: 14px; text-align: left;">
+                <h4 style="margin: 0; color: white; font-family: var(--font-heading); font-size: 0.95rem;">Optimizaciones Cognitivas</h4>
                 
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
                     <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Modo Alta Concentración</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Reduce animaciones y destaca la pregunta activa reduciendo el brillo de otros paneles.</span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Modo Alta Concentración</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Reduce animaciones y destaca la pregunta activa bajando el brillo de otros paneles.</span>
                     </div>
-                    <input type="checkbox" id="chkHighConcentration" ${db.highConcentration ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="chkHighConcentration" ${db.highConcentration ? 'checked' : ''}>
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
                     <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Adaptación para Dislexia</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Aplica tipografía Atkinson Hyperlegible con mayor espaciado de caracteres para evitar rotación visual.</span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Adaptación para Dislexia</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Aplica tipografía Atkinson Hyperlegible con mayor espaciado de letras.</span>
                     </div>
-                    <input type="checkbox" id="chkDyslexia" ${db.dyslexiaMode ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="chkDyslexia" ${db.dyslexiaMode ? 'checked' : ''}>
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
                     <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block;">Modo Estudio Intensivo</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Oculta widgets de estadísticas y rachas para liberar la carga cognitiva visual durante el estudio.</span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Modo Estudio Intensivo</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Oculta widgets de estadísticas y rachas para liberar espacio visual.</span>
                     </div>
-                    <input type="checkbox" id="chkIntensiveStudy" ${db.intensiveStudy ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="chkIntensiveStudy" ${db.intensiveStudy ? 'checked' : ''}>
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
             </div>
         `;
@@ -3988,9 +4155,6 @@ function renderStore() {
     const filtered = STORE_PRODUCTS.filter(p => p.category === currentStoreCategory);
     
     filtered.forEach(p => {
-        const itemCard = document.createElement('div');
-        itemCard.className = 'store-item';
-        
         let isPurchased = false;
         let isActive = false;
         
@@ -4007,6 +4171,9 @@ function renderStore() {
             isPurchased = db.purchasedPhrases.includes(p.id);
             isActive = db.activePhrase === p.id;
         }
+
+        const itemCard = document.createElement('div');
+        itemCard.className = `store-item ${isActive ? 'active-item' : ''}`;
         
         let btnText = 'Comprar';
         let btnClass = 'btn primary-btn store-item-btn';

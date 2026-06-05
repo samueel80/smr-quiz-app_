@@ -47,8 +47,9 @@
                 <button id="openStoreBtn" class="btn secondary-btn study-nav-btn" style="padding: 6px 12px; font-size: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px; display: inline-flex;">storefront</span> Tienda</button>
                 <button id="studyGuideBtn" class="btn secondary-btn study-nav-btn" style="padding: 6px 12px; font-size: 12px;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px; display: inline-flex;">menu_book</span> Guía</button>
                 <button id="millionaireGameBtn" class="btn secondary-btn study-nav-btn" style="padding: 6px 12px; font-size: 12px; background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #fca5a5;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px; display: inline-flex;">payments</span> Millonario</button>
-                <button id="soundToggleBtn" class="control-btn" title="Activar/Desactivar Sonido">
+                <button id="soundToggleBtn" class="btn secondary-btn" style="padding: 6px 12px; font-size: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;" title="Activar/Desactivar Sonido">
                     <span id="soundIcon" class="material-symbols-outlined" style="font-size: 14px; display: inline-flex;">volume_up</span>
+                    <span id="soundText" class="sound-text">Sonido</span>
                 </button>
                 <div class="stats-badge">
                     <span id="totalQuestionsCount">0</span> Preguntas
@@ -229,6 +230,11 @@
                             <button id="clearDatabaseBtn" class="btn danger-btn text-btn" style="width: 100%;">Borrar base de datos</button>
                             <span style="font-size: 0.7rem; color: #f87171; text-align: center;">¡Atención! Elimina preguntas importadas y limpia estadísticas a cero</span>
                         </div>
+
+                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 4px; align-items: center; width: 100%;">
+                            <button id="clearStoreBtn" class="btn danger-btn text-btn" style="width: 100%; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">Restablecer Tienda y Saldo</button>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">Vuelve tu saldo a 0 €, bloquea los temas comprados y restablece tus logros</span>
+                        </div>
                     </div>
 
                     <!-- Panel de Logros -->
@@ -256,7 +262,7 @@
                         <div class="test-indicators">
                             <span id="questionSourceTag" class="source-badge">Oficial</span>
                             <button id="bookmarkActiveBtn" class="star-btn" title="Añadir a favoritos"><span class="material-symbols-outlined" style="font-size: 18px;">star</span></button>
-                            <button id="speakActiveBtn" class="star-btn speak-btn" title="Escuchar pregunta en voz alta"><span class="material-symbols-outlined" style="font-size: 18px;">volume_up</span></button>
+                            <button id="speakActiveBtn" class="star-btn speak-btn" title="Escuchar pregunta en voz alta"><span class="material-symbols-outlined" style="font-size: 18px;">record_voice_over</span></button>
                             <span id="testTimer" class="timer-badge">00:00</span>
                             <button id="exitTestBtn" class="exit-btn" title="Salir del cuestionario" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: 6px; display: inline-flex; align-items: center;"><span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">close</span> Salir</button>
                         </div>
