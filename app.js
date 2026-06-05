@@ -1629,6 +1629,7 @@ const deselectAllSubjectsBtn = document.getElementById('deselectAllSubjectsBtn')
 const exportBackupBtn = document.getElementById('exportBackupBtn');
 const importBackupBtn = document.getElementById('importBackupBtn');
 const backupFileInput = document.getElementById('backupFileInput');
+const btnImportHelp = document.getElementById('btnImportHelp');
 
 // Test Runner Elements
 const currentQuestionNum = document.getElementById('currentQuestionNum');
@@ -1922,21 +1923,12 @@ function loadDatabase() {
 
 function saveDatabase() {
     cachedAllQuestions = null;
-    if (Array.isArray(db.history) && db.history.length > 200) {
-        db.history = db.history.slice(-200);
-    }
     localStorage.setItem('smr_questions_db_pro', JSON.stringify(db));
+    updateDashboardUI();
 }
 
-let lastSavedSessionTime = 0;
-function saveTestSession(force = false) {
+function saveTestSession() {
     if (session && session.questions && session.questions.length > 0) {
-        const now = Date.now();
-        // Limit/throttle localStorage saves to once per 15 seconds unless forced (navigation or answers)
-        if (!force && (now - lastSavedSessionTime < 15000)) {
-            return;
-        }
-        lastSavedSessionTime = now;
         const sessionToSave = {
             questions: session.questions,
             currentIndex: session.currentIndex,
@@ -2163,6 +2155,7 @@ function showToast(title, desc, iconName = 'notifications', type = 'info') {
     }, 4500);
 }
 
+// Update Study Streak
 function updateStreakAndStudy() {
     const todayStr = getTodayDateString();
     const yesterdayStr = getYesterdayDateString();
@@ -2180,6 +2173,7 @@ function updateStreakAndStudy() {
     }
 }
 
+// Check and notify newly unlocked achievements
 function checkNewAchievements() {
     if (!Array.isArray(db.unlockedAchievements)) {
         db.unlockedAchievements = [];
@@ -2190,6 +2184,7 @@ function checkNewAchievements() {
             if (ach.condition()) {
                 db.unlockedAchievements.push(ach.id);
                 updated = true;
+                // Wait slightly to offset overlapping toasts
                 setTimeout(() => {
                     showToast('¡Logro Desbloqueado! 🏆', `${ach.title}: ${ach.desc}`, 'workspace_premium', 'achievement');
                     playSound('victory');
@@ -2202,16 +2197,15 @@ function checkNewAchievements() {
     }
 }
 
+// UI UPDATE
 function updateDashboardUI() {
     setHeaderNavigationBlocked(false);
     const totalList = getAllQuestions();
     totalQuestionsCount.textContent = totalList.length;
     starredCount.textContent = db.starred.length;
     soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
-    const soundText = document.getElementById('soundText');
-    if (soundText) {
-        soundText.textContent = db.soundEnabled ? "Sonido" : "Silencio";
-    }
+    // soundText element removed — icon only button now
+
     streakCount.textContent = db.streak;
     
     const balanceCount = document.getElementById('balanceCount');
@@ -2242,7 +2236,15 @@ function populateSubjectsList() {
     const correctStats = {};
     const attemptStats = {};
     
-    let pool = filterPoolBySource(getAllQuestions(), session.sourceFilter);
+    // Filter pool
+    let pool = getAllQuestions();
+    if (session.sourceFilter === 'oficial') {
+        pool = pool.filter(q => q.source === 'oficial');
+    } else if (session.sourceFilter === 'repaso') {
+        pool = pool.filter(q => q.source === 'repaso');
+    } else if (session.sourceFilter === 'añadida') {
+        pool = pool.filter(q => q.source === 'añadida');
+    }
 
     let currentStarredCount = 0;
     const safeStarred = Array.isArray(db.starred) ? db.starred : [];
@@ -2250,6 +2252,7 @@ function populateSubjectsList() {
         const sub = q.subject || "Sin clasificar";
         counts[sub] = (counts[sub] || 0) + 1;
 
+        // Calculate mastery stats per subject
         const normQ = q.question ? normalizeString(q.question) : "unknown";
         const stats = (db.questionStats && db.questionStats[normQ]) ? db.questionStats[normQ] : { attempts: 0, correct: 0 };
         correctStats[sub] = (correctStats[sub] || 0) + stats.correct;
@@ -2263,6 +2266,7 @@ function populateSubjectsList() {
     const unique = Object.keys(counts).sort();
     subjectsCount.textContent = unique.length;
 
+    // Starred card
     if (currentStarredCount > 0) {
         const isSel = session.selectedSubjects.includes('__starred__');
         const card = document.createElement('div');
@@ -2285,6 +2289,7 @@ function populateSubjectsList() {
         const card = document.createElement('div');
         card.className = `subject-card ${isSel ? 'selected' : ''}`;
         
+        // Calculate mastery percent
         const attempts = attemptStats[sub] || 0;
         const correct = correctStats[sub] || 0;
         const percent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
@@ -2348,12 +2353,11 @@ function toggleSubjectSelection(sub) {
 
 function populateHistoryList() {
     historyList.innerHTML = '';
-    const records = Array.isArray(db.history) ? db.history : [];
-    if (records.length === 0) {
+    if (db.history.length === 0) {
         historyList.innerHTML = `<p class="empty-history">Aún no has realizado ningún test. ¡Comienza ahora!</p>`;
         return;
     }
-    const last = [...records].reverse().slice(0, 10);
+    const last = [...db.history].reverse().slice(0, 10);
     last.forEach(h => {
         const item = document.createElement('div');
         item.className = 'history-item';
@@ -2376,13 +2380,45 @@ function renderAchievements() {
     let unlockedCount = 0;
 
     ACHIEVEMENTS.forEach(ach => {
-        const unlocked = Array.isArray(db.unlockedAchievements) && db.unlockedAchievements.includes(ach.id);
+        const unlocked = ach.condition();
         if (unlocked) unlockedCount++;
 
         const card = document.createElement('div');
         card.className = `achievement-badge-card ${unlocked ? 'unlocked' : ''}`;
         
-        let badgeIcon = getAchievementBadgeIcon(unlocked ? ach.id : 'locked');
+        let badgeIcon = '<span class="material-symbols-outlined">lock</span>';
+        if (unlocked) {
+            if (ach.id === 'first_test') badgeIcon = '<span class="material-symbols-outlined" style="color: #a5b4fc;">rocket_launch</span>';
+            if (ach.id === 'perfect_score') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>';
+            if (ach.id === 'streak_3') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">local_fire_department</span>';
+            if (ach.id === 'streak_7') badgeIcon = '<span class="material-symbols-outlined" style="color: #38bdf8;">shield</span>';
+            if (ach.id === 'starred_10') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">star</span>';
+            if (ach.id === 'repaso_master') badgeIcon = '<span class="material-symbols-outlined" style="color: #c084fc;">psychology</span>';
+            if (ach.id === 'millionaire_play') badgeIcon = '<span class="material-symbols-outlined" style="color: #10b981;">emoji_events</span>';
+            if (ach.id === 'millionaire_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">monetization_on</span>';
+            if (ach.id === 'test_10') badgeIcon = '<span class="material-symbols-outlined" style="color: #60a5fa;">local_library</span>';
+            if (ach.id === 'correct_100') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">auto_awesome</span>';
+            if (ach.id === 'streak_15') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">military_tech</span>';
+            if (ach.id === 'time_limit_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">hourglass_empty</span>';
+            if (ach.id === 'smart_mode_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #67e8f9;">neurology</span>';
+            if (ach.id === 'starred_25') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">auto_stories</span>';
+            if (ach.id === 'perfect_exam') badgeIcon = '<span class="material-symbols-outlined" style="color: #a7f3d0;">school</span>';
+            if (ach.id === 'speedrun') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">speed</span>';
+            
+            // NUEVOS ICONOS
+            if (ach.id === 'first_purchase') badgeIcon = '<span class="material-symbols-outlined" style="color: #60a5fa;">shopping_bag</span>';
+            if (ach.id === 'theme_hoarder') badgeIcon = '<span class="material-symbols-outlined" style="color: #a7f3d0;">palette</span>';
+            if (ach.id === 'rich_student') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">savings</span>';
+            if (ach.id === 'millionaire_capitalist') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">account_balance</span>';
+            if (ach.id === 'streak_30') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>';
+            if (ach.id === 'test_50') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">running_with_errors</span>';
+            if (ach.id === 'smart_master') badgeIcon = '<span class="material-symbols-outlined" style="color: #c084fc;">psychology_alt</span>';
+            if (ach.id === 'exam_veteran') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">history_edu</span>';
+            if (ach.id === 'all_subjects') badgeIcon = '<span class="material-symbols-outlined" style="color: #a5b4fc;">layers</span>';
+            if (ach.id === 'custom_importer') badgeIcon = '<span class="material-symbols-outlined" style="color: #34d399;">publish</span>';
+            if (ach.id === 'favoritos_collector') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">bookmarks</span>';
+            if (ach.id === 'achievement_collector') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">military_tech</span>';
+        }
 
         card.innerHTML = `
             <div class="badge-icon">${badgeIcon}</div>
@@ -2415,16 +2451,15 @@ document.querySelectorAll('#sourceChips .chip-btn').forEach(btn => {
 soundToggleBtn.addEventListener('click', () => {
     db.soundEnabled = !db.soundEnabled;
     soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
-    const soundText = document.getElementById('soundText');
-    if (soundText) {
-        soundText.textContent = db.soundEnabled ? "Sonido" : "Silencio";
-    }
+    // soundText element removed — icon only button now
+
     saveDatabase();
 });
 
 clearDatabaseBtn.addEventListener('click', () => {
     showCustomConfirm('Eliminar Base de Datos', '¿Seguro que deseas eliminar todas las preguntas importadas y restaurar estadísticas?', 'delete_forever').then(confirmed => {
         if (confirmed) {
+            // Keep shop balance, achievements, and purchased customizations
             const savedBalance = db.balance || 0;
             const savedThemes = db.purchasedThemes || ['classic'];
             const savedActiveTheme = db.activeTheme || 'classic';
@@ -2657,6 +2692,48 @@ importBackupBtn.addEventListener('click', () => {
     backupFileInput.click();
 });
 
+btnImportHelp.addEventListener('click', () => {
+    const message = `
+        <div class="import-help-dialog" style="text-align: left; font-size: 0.82rem; line-height: 1.5; color: var(--text-main); max-height: 60vh; overflow-y: auto; padding-right: 8px;">
+            <p style="margin-bottom: 12px;">Puedes importar tus propias preguntas de repaso subiendo o arrastrando archivos en formato <strong>JSON</strong>. El sistema las añadirá a tu base de datos local de inmediato.</p>
+            
+            <h4 style="color: #c084fc; font-size: 0.9rem; margin: 14px 0 6px;">1. Estructura del Archivo JSON</h4>
+            <p style="margin-bottom: 10px;">El archivo debe contener un <strong>array de objetos</strong>. Cada objeto representa una pregunta y debe seguir esta estructura exacta:</p>
+            
+            <pre style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.72rem; color: #34d399; overflow-x: auto; margin-bottom: 14px;">[
+  {
+    &quot;question&quot;: &quot;¿Qué protocolo asigna direcciones IP dinámicas?&quot;,
+    &quot;options&quot;: [
+      &quot;DHCP&quot;,
+      &quot;DNS&quot;,
+      &quot;HTTP&quot;
+    ],
+    &quot;answer&quot;: &quot;DHCP&quot;,
+    &quot;subject&quot;: &quot;Servicios Red&quot;
+  }
+]</pre>
+
+            <h4 style="color: #c084fc; font-size: 0.9rem; margin: 14px 0 6px;">2. Campos obligatorios y reglas</h4>
+            <ul style="padding-left: 18px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; list-style-type: disc;">
+                <li><code>question</code>: El texto de la pregunta (tipo texto).</li>
+                <li><code>options</code>: Un array que contenga exactamente las opciones de respuesta (se recomiendan 3).</li>
+                <li><code>answer</code>: La respuesta correcta. <strong>Debe coincidir exactamente</strong> (incluyendo mayúsculas, minúsculas y acentos) con una de las opciones del array.</li>
+                <li><code>subject</code> (Opcional): Nombre de la asignatura. Si no se indica, se autodetectará del nombre del archivo.</li>
+            </ul>
+
+            <h4 style="color: #c084fc; font-size: 0.9rem; margin: 14px 0 6px;">3. Auto-detección Inteligente por Nombre de Archivo</h4>
+            <p style="margin-bottom: 6px;">Si no especificas el campo <code>subject</code> en cada objeto, el sistema asignará la asignatura basándose en el nombre del archivo JSON subido.</p>
+            <p style="margin-bottom: 6px; font-weight: bold; color: #a78bfa;">¡Nuevo sistema inteligente! Se adapta dinámicamente a cualquiera de las asignaturas activas de la web:</p>
+            <ul style="padding-left: 18px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; list-style-type: disc;">
+                <li>Busca coincidencias aproximadas o sub-cadenas ignorando mayúsculas, minúsculas, espacios y acentos.</li>
+                <li>Por ejemplo, nombrar tu archivo como <code>preguntas_servicios_red.json</code>, <code>servicios.json</code> o <code>serviciosred.json</code> se mapeará automáticamente a <strong>Servicios Red</strong>.</li>
+                <li>Un archivo llamado <code>sistemas_operativos.json</code> o <code>sistemas.json</code> se mapeará a <strong>Sistemas Operativos en Red</strong>.</li>
+            </ul>
+        </div>
+    `;
+    showCustomAlert('¿Cómo importar preguntas? 📝', message, 'help');
+});
+
 backupFileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         const file = e.target.files[0];
@@ -2707,6 +2784,68 @@ dropZone.addEventListener('drop', (e) => {
     if (e.dataTransfer.files.length > 0) processFiles(e.dataTransfer.files);
 });
 
+// Helper: find matching global subject based on fuzzy/case/accent-insensitive match
+function findMatchingGlobalSubject(subjectStr) {
+    if (!subjectStr) return null;
+    
+    // Extract unique subjects currently present in database
+    const globalSubjects = Array.from(new Set(db.questions.map(q => q.subject))).filter(Boolean);
+    const targetClean = subjectStr.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+        
+    if (!targetClean) return null;
+    
+    // 1. Exact match (cleaned)
+    for (const gs of globalSubjects) {
+        const gsClean = gs.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, '')
+            .trim();
+        if (gsClean === targetClean) {
+            return gs;
+        }
+    }
+    
+    // 2. Abbreviation map for HLC
+    if (targetClean === 'hlc' || targetClean === 'hcl') {
+        const hlcMatch = globalSubjects.find(gs => {
+            const gsUpper = gs.toUpperCase();
+            return gsUpper.includes('HLC') || gsUpper.includes('HCL');
+        });
+        if (hlcMatch) return hlcMatch;
+    }
+    
+    // 3. Substring matching (global subject contains the target, e.g. "sistemas operativos" -> "Sistemas Operativos en Red")
+    for (const gs of globalSubjects) {
+        const gsClean = gs.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, '')
+            .trim();
+        if (gsClean.includes(targetClean)) {
+            return gs;
+        }
+    }
+    
+    // 4. Substring matching (target contains the global subject)
+    for (const gs of globalSubjects) {
+        const gsClean = gs.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, '')
+            .trim();
+        if (targetClean.includes(gsClean)) {
+            return gs;
+        }
+    }
+    
+    return null;
+}
+
 function processFiles(files) {
     let loadedCount = 0;
     let newCount = 0;
@@ -2729,23 +2868,36 @@ function processFiles(files) {
                                 .trim();
 
                             let finalSubject = q.subject || fileSubject || "Sin clasificar";
-                            finalSubject = finalSubject
-                                .replace(/_\d+/g, '')
-                                .replace(/\s+\d+/g, '')
-                                .replace(/\d+/g, '')
-                                .replace(/_/g, ' ')
-                                .trim();
                             
-                            finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
-                            
-                            if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
-                                finalSubject = "HLC (Horas de Libre Configuración)";
-                            }
-                            if (finalSubject.toLowerCase() === "sistemas operativos en red") {
-                                finalSubject = "Sistemas Operativos en Red";
-                            }
-                            if (finalSubject.toLowerCase() === "seguridad informática" || finalSubject.toLowerCase() === "seguridad informatica") {
-                                finalSubject = "Seguridad Informatica";
+                            // Apply smart global subject auto-detection
+                            const matchedGlobal = findMatchingGlobalSubject(finalSubject);
+                            if (matchedGlobal) {
+                                finalSubject = matchedGlobal;
+                            } else {
+                                // Fallback standard cleaning if no global match is found
+                                finalSubject = finalSubject
+                                    .replace(/_\d+/g, '')
+                                    .replace(/\s+\d+/g, '')
+                                    .replace(/\d+/g, '')
+                                    .replace(/_/g, ' ')
+                                    .trim();
+                                
+                                finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
+                                
+                                // Capitalize words for clean presentation of new subjects (e.g., "medicina forense" -> "Medicina Forense")
+                                if (finalSubject) {
+                                    finalSubject = finalSubject.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                                }
+                                
+                                if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
+                                    finalSubject = "HLC (Horas de Libre Configuración)";
+                                }
+                                if (finalSubject.toLowerCase() === "sistemas operativos en red") {
+                                    finalSubject = "Sistemas Operativos en Red";
+                                }
+                                if (finalSubject.toLowerCase() === "seguridad informática" || finalSubject.toLowerCase() === "seguridad informatica") {
+                                    finalSubject = "Seguridad Informatica";
+                                }
                             }
 
                             const normText = normalizeString(q.question);
@@ -2852,12 +3004,7 @@ startTestBtn.addEventListener('click', () => {
     setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
-    // Suggest free basic mode to everyone; if they own PRO, suggest that instead
-    if (db.purchasedThemes.includes('theme-concentration-pro')) {
-        showCognitiveRec('theme-concentration-pro', 'Concentración PRO ⚡', 'Para mantener el foco sostenido al máximo nivel, activa tu modo PRO');
-    } else {
-        showCognitiveRec('theme-concentration-basic', 'Concentración Básico 🧠', 'Para mantener el foco sostenido y evitar distracciones, te sugerimos activar el Modo Concentración Básico (gratis)');
-    }
+    showCognitiveRec('theme-concentration', 'Modo Concentración', 'Para mantener el foco sostenido y evitar distracciones, te sugerimos activar el Modo Concentración');
 });
 
 // QUICK CHALLENGE ⚡
@@ -2887,12 +3034,7 @@ quickChallengeBtn.addEventListener('click', () => {
     setHeaderNavigationBlocked(true);
     setupTimer();
     renderQuestion();
-    // Quick challenge: suggest free basic mode or PRO if owned
-    if (db.purchasedThemes.includes('theme-concentration-pro')) {
-        showCognitiveRec('theme-concentration-pro', 'Concentración PRO ⚡', 'Para tests rápidos de alta atención, tu modo PRO ofrece el máximo contraste sin distracciones');
-    } else {
-        showCognitiveRec('theme-concentration-basic', 'Concentración Básico 🧠', 'Para tests rápidos de alta atención, recomendamos la paleta básica sin distracciones (gratis)');
-    }
+    showCognitiveRec('theme-concentration', 'Modo Concentración', 'Para tests rápidos de alta atención, recomendamos la paleta de alto contraste sin distracciones');
 });
 
 // TIMER
@@ -3270,17 +3412,8 @@ function populateStudySubjects() {
     });
 }
 
-// Debounce helper
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
-
 studySubjectSelect.addEventListener('change', renderStudyList);
-studySearch.addEventListener('input', debounce(renderStudyList, 250));
+studySearch.addEventListener('input', renderStudyList);
 
 function renderStudyList() {
     const selectedSub = studySubjectSelect.value;
@@ -3888,44 +4021,58 @@ function getPrizeValue(prizeStr) {
 
 // Shop Products Definition
 const STORE_PRODUCTS = [
-    // Themes
-    { id: 'theme-classic',              category: 'theme', title: 'Clásico Profesional',          desc: 'El tema por defecto de la web en tonos Azul y Rojo.',                                                              price: 0      },
-    { id: 'theme-concentration-basic',  category: 'theme', title: 'Concentración Básico 🧠',      desc: 'Gris-azul suave y sin adornos. El mínimo indispensable para mantener el foco. Gratis para todos.',              price: 0      },
-    { id: 'theme-concentration-pro',    category: 'theme', title: 'Concentración PRO ⚡',          desc: 'Azul neón de alto contraste, borde luminoso animado y paleta de élite. Concentración máxima.',                  price: 8000   },
-    { id: 'theme-memory',               category: 'theme', title: 'Modo Memoria 💡',               desc: 'Usa colores funcionales en respuestas, definiciones y errores para forzar asociaciones visuales.',              price: 15000  },
-    { id: 'theme-reading',              category: 'theme', title: 'Modo Lectura Prolongada 📖',    desc: 'Fondo cálido y contraste suave para reducir fatiga ocular en textos largos.',                                   price: 30000  },
-    { id: 'theme-night-cognitive',      category: 'theme', title: 'Modo Nocturno Cognitivo 🌙',   desc: 'Fondo azul-gris muy oscuro y letras gris claro que evita el deslumbramiento nocturno.',                        price: 0      },
-    { id: 'theme-sevilla',              category: 'theme', title: 'Sevilla Especial 💃',           desc: 'Diseño en carmsí y albero de "Sevilla tiene un color especial".',                                                price: 150000 },
-    { id: 'theme-malaga',               category: 'theme', title: 'Málaga Especial 🌅',           desc: 'Diseño en azul mediterráneo del Málaga pa el mundo.',                                                           price: 2000000},
+    // THEMES
+    { id:'theme-classic', category:'theme', price:0, title:'Clásico Profesional', desc:'El tema por defecto en tonos azul marino y rojo.', preview:{type:'palette',colors:['#0b0f19','#2563eb','#dc2626','#f9fafb']} },
+    { id:'theme-concentration', category:'theme', price:5000, title:'Modo Concentración 🧠', desc:'Azules de alto contraste. Mínimas distracciones para tests largos.', preview:{type:'palette',colors:['#0a0f1d','#3b82f6','#1d4ed8','#e0f2fe']} },
+    { id:'theme-memory', category:'theme', price:15000, title:'Modo Memoria 💡', desc:'Colores funcionales en respuestas y errores para forzar asociaciones visuales.', preview:{type:'palette',colors:['#0d121f','#8b5cf6','#10b981','#ef4444']} },
+    { id:'theme-reading', category:'theme', price:30000, title:'Lectura Prolongada 📖', desc:'Fondo cálido y contraste suave para reducir fatiga ocular.', preview:{type:'palette',colors:['#1c1510','#d97706','#92400e','#fef3c7']} },
+    { id:'theme-night-cognitive', category:'theme', price:0, title:'Nocturno Cognitivo 🌙', desc:'Fondo azul-gris muy oscuro. Evita el deslumbramiento nocturno.', preview:{type:'palette',colors:['#0d1117','#1e3a5f','#2d4a6e','#94a3b8']} },
+    { id:'theme-forest', category:'theme', price:20000, title:'Bosque Oscuro 🌲', desc:'Verde pino profundo con detalles esmeralda. Muy reposante para la vista.', preview:{type:'palette',colors:['#0a130d','#166534','#16a34a','#d1fae5']} },
+    { id:'theme-sunset', category:'theme', price:45000, title:'Atardecer 🌄', desc:'Degradado cálido de rosa a naranja. Energía y creatividad.', preview:{type:'palette',colors:['#1a0610','#9d174d','#f97316','#fef9c3']} },
+    { id:'theme-aurora', category:'theme', price:80000, title:'Aurora Boreal ✨', desc:'Cianos, magentas y esmeraldas que imitan la aurora polar.', preview:{type:'palette',colors:['#06141b','#0891b2','#7c3aed','#6ee7b7']} },
+    { id:'theme-sevilla', category:'theme', price:150000, title:'Sevilla Especial 💃', desc:'Diseño en carmesí y albero. Sevilla tiene un color especial.', preview:{type:'palette',colors:['#1a0a05','#c0392b','#e67e22','#f9e4b7']} },
+    { id:'theme-cyber', category:'theme', price:500000, title:'Cyberpunk 🤖', desc:'Amarillo eléctrico y cian neon sobre negro profundo. Gamer edition.', preview:{type:'palette',colors:['#000000','#facc15','#22d3ee','#f0abfc']} },
+    { id:'theme-malaga', category:'theme', price:2000000, title:'Málaga Especial 🌅', desc:'Azul mediterráneo del Málaga pa el mundo. Exclusivo.', preview:{type:'palette',colors:['#060d1a','#0369a1','#0ea5e9','#bae6fd']} },
 
-    // Fonts
-    { id: 'font-default', category: 'font', title: 'Outfit & Jakarta', desc: 'Tipografía de la interfaz estándar.', price: 0 },
-    { id: 'font-inter', category: 'font', title: 'Inter', desc: 'Sans-serif moderna de alta legibilidad en escritorio y móvil.', price: 10000 },
-    { id: 'font-source-sans', category: 'font', title: 'Source Sans 3', desc: 'Legibilidad perfecta en bloques de texto continuo.', price: 25000 },
-    { id: 'font-atkinson', category: 'font', title: 'Atkinson Hyperlegible', desc: 'Diseñada con caracteres claramente diferenciables para facilitar el reconocimiento visual.', price: 50000 },
-    { id: 'font-noto-sans', category: 'font', title: 'Noto Sans', desc: 'Excelente rendimiento y contraste para lectura digital continuada.', price: 100000 },
+    // FONTS
+    { id:'font-default', category:'font', price:0, title:'Outfit & Jakarta', desc:'Tipografía estándar de la interfaz. Moderna y limpia.', preview:{type:'font',sample:'Aa',family:'Outfit, sans-serif',hint:'Predeterminada'} },
+    { id:'font-inter', category:'font', price:10000, title:'Inter', desc:'Sans-serif de alta legibilidad en escritorio y móvil.', preview:{type:'font',sample:'Aa',family:'Inter, sans-serif',hint:'Alta legibilidad'} },
+    { id:'font-space-grotesk', category:'font', price:20000, title:'Space Grotesk', desc:'Geométrica y tecnológica. Futurista y muy legible.', preview:{type:'font',sample:'Ag',family:'"Space Grotesk", sans-serif',hint:'Futurista'} },
+    { id:'font-source-sans', category:'font', price:25000, title:'Source Sans 3', desc:'Legibilidad perfecta en bloques de texto continuo.', preview:{type:'font',sample:'Aa',family:'"Source Sans 3", sans-serif',hint:'Texto largo'} },
+    { id:'font-roboto-mono', category:'font', price:35000, title:'Roboto Mono', desc:'Monoespaciada. Ideal para definiciones técnicas y código.', preview:{type:'font',sample:'01',family:'"Roboto Mono", monospace',hint:'Mono / Técnica'} },
+    { id:'font-atkinson', category:'font', price:50000, title:'Atkinson Hyperlegible', desc:'Caracteres diferenciables para facilitar el reconocimiento visual.', preview:{type:'font',sample:'Aa',family:'"Atkinson Hyperlegible", sans-serif',hint:'Dislexia-friendly'} },
+    { id:'font-playfair', category:'font', price:60000, title:'Playfair Display', desc:'Serif elegante con mucho carácter. Para un estilo premium.', preview:{type:'font',sample:'Aa',family:'"Playfair Display", serif',hint:'Elegante'} },
+    { id:'font-noto-sans', category:'font', price:100000, title:'Noto Sans', desc:'Excelente rendimiento y contraste para lectura digital.', preview:{type:'font',sample:'Aa',family:'"Noto Sans", sans-serif',hint:'Universal'} },
 
-    // Buttons
-    { id: 'btn-default', category: 'button', title: 'Botón Redondeado', desc: 'Estilo de botones estándar.', price: 0 },
-    { id: 'btn-futuristic', category: 'button', title: 'Botón Futurista', desc: 'Bordes rectos con sombreado de neón sutil.', price: 25000 },
-    { id: 'btn-pixel', category: 'button', title: 'Estilo Retro Pixel 👾', desc: 'Botones cuadrados con borde grueso y estilo arcade.', price: 150000 },
-    { id: 'btn-glow', category: 'button', title: 'Ultra Resplandor ✨', desc: 'Botones con animación de pulso luminosa constante.', price: 1000000 },
+    // BUTTONS
+    { id:'btn-default', category:'button', price:0, title:'Redondeado Estándar', desc:'Estilo de botones por defecto. Suave y profesional.', preview:{type:'button',style:'background:#2563eb;border-radius:8px;color:white;border:none;',label:'Responder'} },
+    { id:'btn-minimal', category:'button', price:15000, title:'Minimalista Outline', desc:'Solo el borde visible. Elegancia y sencillez máxima.', preview:{type:'button',style:'background:transparent;border:1.5px solid rgba(255,255,255,0.5);border-radius:8px;color:white;',label:'Responder'} },
+    { id:'btn-futuristic', category:'button', price:25000, title:'Botón Futurista 🔮', desc:'Bordes rectos con sombra de neón sutil. Estilo tech.', preview:{type:'button',style:'background:transparent;border:1px solid #22d3ee;border-radius:2px;color:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,0.4);',label:'Responder'} },
+    { id:'btn-gradient', category:'button', price:40000, title:'Gradiente Suave 🌈', desc:'Degradado horizontal de colores vivos en cada botón.', preview:{type:'button',style:'background:linear-gradient(90deg,#f97316,#ec4899);border:none;border-radius:8px;color:white;',label:'Responder'} },
+    { id:'btn-glass', category:'button', price:75000, title:'Cristal Glass 🔮', desc:'Efecto de cristal esmerilado con fondo semitransparente.', preview:{type:'button',style:'background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:white;',label:'Responder'} },
+    { id:'btn-pixel', category:'button', price:150000, title:'Retro Pixel 👾', desc:'Cuadrados con borde grueso y estilo arcade retro. Gamer.', preview:{type:'button',style:'background:#1a1a2e;border:3px solid #e94560;border-radius:0;color:#e94560;font-family:monospace;letter-spacing:1px;',label:'RESPONDER'} },
+    { id:'btn-glow', category:'button', price:1000000, title:'Ultra Resplandor ✨', desc:'Animación de pulso luminosa constante. Efecto premium.', preview:{type:'button',style:'background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:8px;color:white;box-shadow:0 0 18px rgba(139,92,246,0.7);',label:'Responder'} },
 
-    // Phrases
-    { id: 'phrase-malaga1', category: 'phrase', title: 'de málaga pa el mundo 🌍', desc: 'Lema por defecto de la cabecera.', price: 0 },
-    { id: 'phrase-malaga2', category: 'phrase', title: '🍋 ¡Qué pechá de estudiar! 🍋', desc: 'Lema malagueño para los días de estudio intenso.', price: 10000 },
-    { id: 'phrase-sevilla1', category: 'phrase', title: '💃 Sevilla tiene un color especial 💃', desc: 'Lema de la capital andaluza.', price: 25000 },
-    { id: 'phrase-sevilla2', category: 'phrase', title: '🍊 ¡Mi arma, a por el diez! 🍊', desc: 'Slogan motivador sevillano.', price: 50000 },
-    { id: 'phrase-madrid1', category: 'phrase', title: '🐻 De Madrid al cielo ☁️', desc: 'Lema clásico madrileño.', price: 20000 },
-    { id: 'phrase-madrid2', category: 'phrase', title: '🚇 ¡Qué mazo preguntas! 🚇', desc: 'Expresión típica madrileña para los tests gigantes.', price: 40000 },
-    { id: 'phrase-cesur', category: 'phrase', title: '🎓 Orgullo Cesur 🎓', desc: 'Lema oficial para los alumnos de Cesur.', price: 100000 }
+    // PHRASES
+    { id:'phrase-malaga1', category:'phrase', price:0, title:'de málaga pa el mundo 🌍', desc:'Lema por defecto de la cabecera.', preview:{type:'phrase',text:'De Málaga pa el mundo 🌍',color:'#ef4444'} },
+    { id:'phrase-motivacion1', category:'phrase', price:5000, title:'💥 A tope, el examen no espera!', desc:'Para activar el modo bestia antes de un test.', preview:{type:'phrase',text:'💥 A tope, el examen no espera!',color:'#f87171'} },
+    { id:'phrase-motivacion2', category:'phrase', price:8000, title:'🤖 Modo IA activado', desc:'Para los que se sienten en el futuro estudiando.', preview:{type:'phrase',text:'🤖 Modo IA activado',color:'#6ee7b7'} },
+    { id:'phrase-malaga2', category:'phrase', price:10000, title:'🍋 ¡Qué pechá de estudiar! 🍋', desc:'Lema malagueño para los días de estudio intenso.', preview:{type:'phrase',text:'🍋 ¡Qué pechá de estudiar!',color:'#facc15'} },
+    { id:'phrase-madrid1', category:'phrase', price:20000, title:'🐻 De Madrid al cielo ☁️', desc:'Lema clásico madrileño.', preview:{type:'phrase',text:'🐻 De Madrid al cielo',color:'#60a5fa'} },
+    { id:'phrase-sevilla1', category:'phrase', price:25000, title:'💃 Sevilla tiene un color especial 💃', desc:'Lema de la capital andaluza.', preview:{type:'phrase',text:'💃 Sevilla tiene un color especial',color:'#f97316'} },
+    { id:'phrase-galicia', category:'phrase', price:30000, title:'🌊 Galicia Calidade 🌊', desc:'Para los que estudian con la lluvia de fondo.', preview:{type:'phrase',text:'🌊 Galicia Calidade',color:'#38bdf8'} },
+    { id:'phrase-barcelona', category:'phrase', price:35000, title:'🗼 Barcelona més que un club', desc:'Homenaje a la ciudad condal.', preview:{type:'phrase',text:'🗼 Barcelona més que un club',color:'#f472b6'} },
+    { id:'phrase-madrid2', category:'phrase', price:40000, title:'🚇 ¡Qué mazo preguntas! 🚇', desc:'Expresión típica madrileña para los tests gigantes.', preview:{type:'phrase',text:'🚇 ¡Qué mazo preguntas!',color:'#a78bfa'} },
+    { id:'phrase-sevilla2', category:'phrase', price:50000, title:'🍊 ¡Mi arma, a por el diez! 🍊', desc:'Slogan motivador sevillano.', preview:{type:'phrase',text:'🍊 ¡Mi arma, a por el diez!',color:'#fb923c'} },
+    { id:'phrase-cesur', category:'phrase', price:100000, title:'🎓 Orgullo Cesur 🎓', desc:'Lema oficial para los alumnos de Cesur.', preview:{type:'phrase',text:'🎓 Orgullo Cesur',color:'#34d399'} },
 ];
 
 const STORE_BODY_CLASSES = [
-    'theme-concentration-basic', 'theme-concentration-pro', 'theme-concentration',
-    'theme-memory', 'theme-reading', 'theme-night-cognitive', 'theme-sevilla', 'theme-malaga',
+    'theme-concentration', 'theme-memory', 'theme-reading', 'theme-night-cognitive',
+    'theme-sevilla', 'theme-malaga', 'theme-forest', 'theme-sunset', 'theme-aurora', 'theme-cyber',
     'font-inter', 'font-source-sans', 'font-atkinson', 'font-noto-sans',
-    'btn-futuristic', 'btn-pixel', 'btn-glow',
+    'font-roboto-mono', 'font-playfair', 'font-space-grotesk',
+    'btn-futuristic', 'btn-pixel', 'btn-glow', 'btn-glass', 'btn-gradient', 'btn-minimal',
     'dyslexia-active', 'high-concentration-active', 'intensive-study-active'
 ];
 
@@ -4066,8 +4213,8 @@ function applyStoreCustomizations() {
         document.body.classList.add('intensive-study-active');
         stylesText += `
             body.intensive-study-active .dashboard-footer-grid,
-            body.intensive-study-active .streak-badge,
-            body.intensive-study-active .stats-badge,
+            body.intensive-study-active .hstat-pill,
+            body.intensive-study-active .header-divider,
             body.intensive-study-active .glowing-orb {
                 display: none !important;
             }
@@ -4089,154 +4236,70 @@ function applyStoreCustomizations() {
 
 let currentStoreCategory = 'theme';
 
+// ─────────────────────────────────────────────
+// Visual Preview Generator per product type
+// ─────────────────────────────────────────────
+function buildPreviewHTML(p) {
+    if (!p.preview) return '';
+    const { type } = p.preview;
+
+    if (type === 'palette') {
+        const cols = p.preview.colors;
+        const swatches = cols.map((c, i) => {
+            const s = i === 0 ? '30px' : i === 1 ? '22px' : i === 2 ? '18px' : '14px';
+            return `<div style="width:${s};height:${s};background:${c};border-radius:${i===0?'7px':'50%'};flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`;
+        }).join('');
+        return `
+        <div class="si-preview si-preview-palette">
+            <div style="display:flex;align-items:center;gap:6px;">${swatches}</div>
+            <div class="si-preview-ui-lines">
+                <div style="height:6px;border-radius:3px;background:${cols[1]};margin-bottom:5px;width:75%;"></div>
+                <div style="height:4px;border-radius:3px;background:${cols[2]};opacity:.5;width:55%;margin-bottom:4px;"></div>
+                <div style="height:4px;border-radius:3px;background:${cols[3]};opacity:.35;width:40%;"></div>
+            </div>
+        </div>`;
+    }
+
+    if (type === 'font') {
+        return `
+        <div class="si-preview si-preview-font">
+            <span class="si-font-sample" style="font-family:${p.preview.family};">${p.preview.sample}</span>
+            <div class="si-font-right">
+                <span class="si-font-abc" style="font-family:${p.preview.family};">ABCabc 012</span>
+                <span class="si-font-tag">${p.preview.hint}</span>
+            </div>
+        </div>`;
+    }
+
+    if (type === 'button') {
+        return `
+        <div class="si-preview si-preview-button">
+            <button style="${p.preview.style}padding:7px 16px;font-size:11px;cursor:default;font-family:inherit;pointer-events:none;">${p.preview.label}</button>
+        </div>`;
+    }
+
+    if (type === 'phrase') {
+        return `
+        <div class="si-preview si-preview-phrase">
+            <span style="color:${p.preview.color};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;line-height:1.4;">${p.preview.text}</span>
+        </div>`;
+    }
+
+    return '';
+}
+
 // Render Shop UI by Category
 function renderStore() {
     const storeGrid = document.getElementById('storeGrid');
     if (!storeGrid) return;
     storeGrid.innerHTML = '';
-    
-    if (currentStoreCategory === 'cognitive') {
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.gap = '15px';
-        wrapper.style.width = '100%';
-        wrapper.style.padding = '5px';
-        
-        // Ensure values are defined
-        if (db.fontSize === undefined) db.fontSize = 'default';
-        if (db.lineHeight === undefined) db.lineHeight = 'default';
-        if (db.letterSpacing === undefined) db.letterSpacing = 'default';
-        if (db.maxReadingWidth === undefined) db.maxReadingWidth = 'default';
-        
-        wrapper.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; text-align: left;">
-                <h4 style="margin: 0; color: white; font-family: var(--font-heading); font-size: 0.95rem; margin-bottom: 4px;">Ajustes de Lectura</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tamaño de Texto:</label>
-                        <select id="selectFontSize" class="store-select-custom">
-                            <option value="default" ${db.fontSize === 'default' ? 'selected' : ''}>Estándar (15px)</option>
-                            <option value="medium" ${db.fontSize === 'medium' ? 'selected' : ''}>Mediano (17px)</option>
-                            <option value="large" ${db.fontSize === 'large' ? 'selected' : ''}>Grande (19px)</option>
-                            <option value="xlarge" ${db.fontSize === 'xlarge' ? 'selected' : ''}>Extra Grande (21px)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Altura de Línea:</label>
-                        <select id="selectLineHeight" class="store-select-custom">
-                            <option value="default" ${db.lineHeight === 'default' ? 'selected' : ''}>Estándar (1.6)</option>
-                            <option value="low" ${db.lineHeight === 'low' ? 'selected' : ''}>Baja (1.3)</option>
-                            <option value="high" ${db.lineHeight === 'high' ? 'selected' : ''}>Alta (1.8)</option>
-                            <option value="extra" ${db.lineHeight === 'extra' ? 'selected' : ''}>Extra (2.0)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Espaciado de Letras:</label>
-                        <select id="selectLetterSpacing" class="store-select-custom">
-                            <option value="default" ${db.letterSpacing === 'default' ? 'selected' : ''}>Estándar</option>
-                            <option value="wide" ${db.letterSpacing === 'wide' ? 'selected' : ''}>Ancho (+0.5px)</option>
-                            <option value="wider" ${db.letterSpacing === 'wider' ? 'selected' : ''}>Muy Ancho (+1.5px)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ancho Máx. Lectura:</label>
-                        <select id="selectMaxWidth" class="store-select-custom">
-                            <option value="default" ${db.maxReadingWidth === 'default' ? 'selected' : ''}>Estándar (Completo)</option>
-                            <option value="600" ${db.maxReadingWidth === '600' ? 'selected' : ''}>Estrecho (600px)</option>
-                            <option value="700" ${db.maxReadingWidth === '700' ? 'selected' : ''}>Medio (700px)</option>
-                            <option value="800" ${db.maxReadingWidth === '800' ? 'selected' : ''}>Ancho (800px)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 14px; text-align: left;">
-                <h4 style="margin: 0; color: white; font-family: var(--font-heading); font-size: 0.95rem;">Optimizaciones Cognitivas</h4>
-                
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Modo Alta Concentración</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Reduce animaciones y destaca la pregunta activa bajando el brillo de otros paneles.</span>
-                    </div>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="chkHighConcentration" ${db.highConcentration ? 'checked' : ''}>
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Adaptación para Dislexia</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Aplica tipografía Atkinson Hyperlegible con mayor espaciado de letras.</span>
-                    </div>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="chkDyslexia" ${db.dyslexiaMode ? 'checked' : ''}>
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: rgba(255, 255, 255, 0.02); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04);">
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: white; display: block; margin-bottom: 2px;">Modo Estudio Intensivo</span>
-                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; line-height: 1.3;">Oculta widgets de estadísticas y rachas para liberar espacio visual.</span>
-                    </div>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="chkIntensiveStudy" ${db.intensiveStudy ? 'checked' : ''}>
-                        <span class="switch-slider"></span>
-                    </label>
-                </div>
-            </div>
-        `;
-        
-        storeGrid.appendChild(wrapper);
-        
-        // Bind changes
-        document.getElementById('selectFontSize').addEventListener('change', (e) => {
-            db.fontSize = e.target.value;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('selectLineHeight').addEventListener('change', (e) => {
-            db.lineHeight = e.target.value;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('selectLetterSpacing').addEventListener('change', (e) => {
-            db.letterSpacing = e.target.value;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('selectMaxWidth').addEventListener('change', (e) => {
-            db.maxReadingWidth = e.target.value;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('chkHighConcentration').addEventListener('change', (e) => {
-            db.highConcentration = e.target.checked;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('chkDyslexia').addEventListener('change', (e) => {
-            db.dyslexiaMode = e.target.checked;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        document.getElementById('chkIntensiveStudy').addEventListener('change', (e) => {
-            db.intensiveStudy = e.target.checked;
-            saveDatabase();
-            applyStoreCustomizations();
-        });
-        
-        return;
-    }
 
     const filtered = STORE_PRODUCTS.filter(p => p.category === currentStoreCategory);
-    
+
     filtered.forEach(p => {
         let isPurchased = false;
         let isActive = false;
-        
+
         if (p.category === 'theme') {
             isPurchased = db.purchasedThemes.includes(p.id);
             isActive = db.activeTheme === p.id || (p.id === 'theme-classic' && db.activeTheme === 'classic');
@@ -4253,41 +4316,44 @@ function renderStore() {
 
         const itemCard = document.createElement('div');
         itemCard.className = `store-item ${isActive ? 'active-item' : ''}`;
-        
+
         let btnText = 'Comprar';
         let btnClass = 'btn primary-btn store-item-btn';
-
         if (isActive) {
             btnText = 'Activo';
             btnClass = 'btn success-btn store-item-btn';
-        } else if (isPurchased || p.price === 0) {
-            // Already owned OR completely free → just activate, no purchase needed
+        } else if (isPurchased) {
             btnText = 'Activar';
             btnClass = 'btn secondary-btn store-item-btn';
         }
-        
-        // If the item is free, already purchased, or currently active → show "Gratis"
+
         const effectivelyFree = p.price === 0 || isPurchased || isActive;
         const priceLabel = effectivelyFree ? 'Gratis' : `${p.price.toLocaleString('es-ES')} €`;
         const ownedBadge = (isPurchased || isActive) && p.price > 0
-            ? `<span style="display:inline-block; margin-top:4px; font-size:0.68rem; font-weight:700; color:var(--success); background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:4px; padding:1px 6px; letter-spacing:0.03em;">✓ Ya adquirido</span>`
+            ? `<span class="si-owned-badge">&#10003; Ya adquirido</span>`
             : '';
-        
+        const activeDot = isActive
+            ? `<span class="si-active-dot"></span>`
+            : '';
+
         itemCard.innerHTML = `
+            ${buildPreviewHTML(p)}
             <div class="store-item-info">
-                <span class="store-item-title">${p.title}</span>
+                <div class="si-title-row">
+                    ${activeDot}
+                    <span class="store-item-title">${p.title}</span>
+                </div>
                 <span class="store-item-desc">${p.desc}</span>
-                <span class="store-item-price" style="${effectivelyFree && p.price > 0 ? 'color:var(--success);' : ''}">${priceLabel}</span>
+                <span class="store-item-price" style="${effectivelyFree && p.price > 0 ? 'color:var(--success);background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);' : ''}">${priceLabel}</span>
                 ${ownedBadge}
             </div>
             <button class="${btnClass}" data-id="${p.id}" ${isActive ? 'disabled' : ''}>${btnText}</button>
         `;
-        
-        // Button Event Listener
+
         itemCard.querySelector('button').addEventListener('click', () => {
             handleStoreAction(p, isPurchased);
         });
-        
+
         storeGrid.appendChild(itemCard);
     });
 }
@@ -4348,7 +4414,7 @@ function openStore() {
         updateBodyScroll();
         currentStoreCategory = 'theme';
         // Reset tab buttons state
-        document.querySelectorAll('#storeTabs .chip-btn').forEach(btn => {
+        document.querySelectorAll('#storeTabs .store-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.category === 'theme');
         });
         renderStore();
@@ -4376,20 +4442,105 @@ if (storeModal) {
     });
 }
 
-// Store Tabs click listeners
-document.querySelectorAll('#storeTabs .chip-btn').forEach(btn => {
+// Store Tabs click listeners — new .store-tab class
+document.querySelectorAll('#storeTabs .store-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('#storeTabs .chip-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#storeTabs .store-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentStoreCategory = btn.dataset.category;
         renderStore();
     });
 });
 
-// DEVELOPER EASTER EGG (Triggered by 5 clicks on logo area in < 3 seconds)
+// ═══════════════════════════════════════════════════════
+// COGNITIVE DROPDOWN — Header Panel Logic
+// ═══════════════════════════════════════════════════════
+const cogBtn = document.getElementById('cognitiveSettingsBtn');
+const cogDropdown = document.getElementById('cognitiveDropdown');
+
+// Helper: sync dropdown selects/checkboxes with current db values
+function syncCognitiveDropdown() {
+    const fs = document.getElementById('selectFontSize');
+    const lh = document.getElementById('selectLineHeight');
+    const ls = document.getElementById('selectLetterSpacing');
+    const mw = document.getElementById('selectMaxWidth');
+    const chkHC = document.getElementById('chkHighConcentration');
+    const chkDys = document.getElementById('chkDyslexia');
+    const chkIS = document.getElementById('chkIntensiveStudy');
+    if (fs) fs.value = db.fontSize || 'default';
+    if (lh) lh.value = db.lineHeight || 'default';
+    if (ls) ls.value = db.letterSpacing || 'default';
+    if (mw) mw.value = db.maxReadingWidth || 'default';
+    if (chkHC) chkHC.checked = !!db.highConcentration;
+    if (chkDys) chkDys.checked = !!db.dyslexiaMode;
+    if (chkIS) chkIS.checked = !!db.intensiveStudy;
+}
+
+// Helper: bind all the cognitive controls once
+function bindCognitiveDropdownControls() {
+    const bindSelect = (id, key) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', e => {
+            db[key] = e.target.value;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+    };
+    const bindCheck = (id, key) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', e => {
+            db[key] = e.target.checked;
+            saveDatabase();
+            applyStoreCustomizations();
+        });
+    };
+    bindSelect('selectFontSize',    'fontSize');
+    bindSelect('selectLineHeight',  'lineHeight');
+    bindSelect('selectLetterSpacing','letterSpacing');
+    bindSelect('selectMaxWidth',    'maxReadingWidth');
+    bindCheck('chkHighConcentration','highConcentration');
+    bindCheck('chkDyslexia',         'dyslexiaMode');
+    bindCheck('chkIntensiveStudy',   'intensiveStudy');
+}
+
+let cogDropdownBound = false;
+if (cogBtn && cogDropdown) {
+    cogBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = cogDropdown.style.display !== 'none';
+        if (isOpen) {
+            cogDropdown.style.display = 'none';
+            cogBtn.classList.remove('hbtn-active');
+        } else {
+            cogDropdown.style.display = 'block';
+            cogBtn.classList.add('hbtn-active');
+            syncCognitiveDropdown();
+            if (!cogDropdownBound) {
+                bindCognitiveDropdownControls();
+                cogDropdownBound = true;
+            }
+        }
+    });
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!cogDropdown.contains(e.target) && e.target !== cogBtn) {
+            cogDropdown.style.display = 'none';
+            cogBtn.classList.remove('hbtn-active');
+        }
+    });
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && cogDropdown.style.display !== 'none') {
+            cogDropdown.style.display = 'none';
+            cogBtn.classList.remove('hbtn-active');
+        }
+    });
+}
+
+// DEVELOPER EASTER EGG (Triggered by 5 clicks on the logo icon in < 3 seconds)
 let developerClicks = 0;
 let developerClicksTimeout = null;
-const devTrigger = document.querySelector('.logo-area'); // Trigger on header title clicks
+const devTrigger = document.querySelector('.header-logo-icon'); // new element
 if (devTrigger) {
     devTrigger.style.cursor = 'pointer';
     devTrigger.addEventListener('click', () => {
@@ -4426,37 +4577,13 @@ function showCognitiveRec(themeId, themeName, reason) {
     const banner = document.getElementById('cognitiveRecBanner');
     const textEl = document.getElementById('cognitiveRecText');
     if (!banner || !textEl) return;
-
+    
     // If the theme is already active, don't recommend it
     if (db.activeTheme === themeId || (themeId === 'theme-classic' && db.activeTheme === 'classic')) {
         return;
     }
-
-    // Check if the theme is paid and not yet purchased
-    const product = STORE_PRODUCTS.find(p => p.id === themeId);
-    const isPurchased = db.purchasedThemes.includes(themeId);
-    const isFree = !product || product.price === 0;
-
-    if (!isFree && !isPurchased) {
-        // Theme is paid and not owned — show a "locked" recommendation pointing to the store
-        pendingRecThemeId = null; // no auto-apply
-        textEl.innerHTML = `🔒 <strong>Recomendación bloqueada:</strong> ${reason}, pero el <strong>${themeName}</strong> es de pago. ¡Cómpralo en la tienda!`;
-        const acceptBtn = document.getElementById('acceptCognitiveRecBtn');
-        if (acceptBtn) {
-            acceptBtn.textContent = 'Ver en tienda';
-            acceptBtn.dataset.openStore = '1';
-        }
-        banner.style.display = 'flex';
-        return;
-    }
-
-    // Theme is free or already purchased — offer to activate it
+    
     pendingRecThemeId = themeId;
-    const acceptBtn = document.getElementById('acceptCognitiveRecBtn');
-    if (acceptBtn) {
-        acceptBtn.textContent = 'Aplicar';
-        delete acceptBtn.dataset.openStore;
-    }
     textEl.innerHTML = `💡 <strong>Recomendación cognitiva:</strong> ${reason}. ¿Deseas activar el <strong>${themeName}</strong>?`;
     banner.style.display = 'flex';
 }
@@ -4468,24 +4595,10 @@ const recBanner = document.getElementById('cognitiveRecBanner');
 
 if (acceptRecBtn) {
     acceptRecBtn.addEventListener('click', () => {
-        // If it's a locked (paid, not owned) theme, open the store instead
-        if (acceptRecBtn.dataset.openStore === '1') {
-            if (recBanner) recBanner.style.display = 'none';
-            const storeModal = document.getElementById('storeModal');
-            if (storeModal) {
-                storeModal.style.display = 'flex';
-                if (typeof renderStore === 'function') renderStore();
-                const balLabel = document.getElementById('storeBalanceLabel');
-                if (balLabel) balLabel.textContent = db.balance || 0;
-            }
-            return;
-        }
-
         if (pendingRecThemeId) {
             db.activeTheme = pendingRecThemeId;
-            // Only add to purchased if it's actually free (price === 0) — never auto-gift paid themes
-            const product = STORE_PRODUCTS.find(p => p.id === pendingRecThemeId);
-            if (product && product.price === 0 && !db.purchasedThemes.includes(pendingRecThemeId)) {
+            // Ensure recommended theme is in purchased list (accessible/free gift)
+            if (!db.purchasedThemes.includes(pendingRecThemeId)) {
                 db.purchasedThemes.push(pendingRecThemeId);
             }
             saveDatabase();
@@ -4493,7 +4606,7 @@ if (acceptRecBtn) {
             if (typeof renderStore === 'function') {
                 renderStore();
             }
-            showToast('Tema Aplicado 🧠', `Se ha activado el tema de forma óptima para tu sesión actual.`, 'palette', 'success');
+            showToast('Tema Recomendado Aplicado 🧠', `Se ha activado el tema de forma óptima para tu sesión actual.`, 'palette', 'success');
         }
         if (recBanner) recBanner.style.display = 'none';
     });
