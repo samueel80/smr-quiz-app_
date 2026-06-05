@@ -1327,7 +1327,21 @@ const ACHIEVEMENTS = [
     { id: 'smart_mode_win', title: 'Inteligencia Artificial', desc: 'Completa un test en Modo Inteligente.', condition: () => db.history.some(h => h.mode === 'smart') },
     { id: 'starred_25', title: 'Enciclopedia', desc: 'Guarda 25 o más preguntas favoritas.', condition: () => db.starred.length >= 25 },
     { id: 'perfect_exam', title: 'Examen de Honor', desc: 'Consigue un 100% de aciertos en Modo Examen.', condition: () => db.history.some(h => h.mode === 'exam' && h.percent === 100) },
-    { id: 'speedrun', title: 'Velocidad Absoluta', desc: 'Completa un test de al menos 10 preguntas en menos de 60 segundos.', condition: () => db.history.some(h => h.total >= 10 && h.timeSpent && h.timeSpent <= 60) }
+    { id: 'speedrun', title: 'Velocidad Absoluta', desc: 'Completa un test de al menos 10 preguntas en menos de 60 segundos.', condition: () => db.history.some(h => h.total >= 10 && h.timeSpent && h.timeSpent <= 60) },
+    
+    // NUEVOS LOGROS
+    { id: 'first_purchase', title: 'Primera Compra', desc: 'Adquiere tu primer producto en la tienda académica.', condition: () => (db.purchasedThemes.length + db.purchasedFonts.length + db.purchasedButtons.length) > 3 },
+    { id: 'theme_hoarder', title: 'Diseñador SMR', desc: 'Adquiere 3 o más temas visuales en la tienda.', condition: () => db.purchasedThemes.length >= 3 },
+    { id: 'rich_student', title: 'Estudiante Acomodado', desc: 'Acumula un saldo de 50.000 € virtuales.', condition: () => (db.balance || 0) >= 50000 },
+    { id: 'millionaire_capitalist', title: 'Magnate de SMR', desc: 'Acumula un saldo de 5.000.000 € virtuales.', condition: () => (db.balance || 0) >= 5000000 },
+    { id: 'streak_30', title: 'Leyenda Viviente', desc: 'Alcanza una racha de 30 días de estudio.', condition: () => db.streak >= 30 },
+    { id: 'test_50', title: 'Maratón de Estudio', desc: 'Completa un test de 50 preguntas o más.', condition: () => db.history.some(h => h.total >= 50) },
+    { id: 'smart_master', title: 'Mente Algorítmica', desc: 'Completa 5 tests en Modo Inteligente.', condition: () => db.history.filter(h => h.mode === 'smart').length >= 5 },
+    { id: 'exam_veteran', title: 'Veterano de Exámenes', desc: 'Completa 5 tests en Modo Examen.', condition: () => db.history.filter(h => h.mode === 'exam').length >= 5 },
+    { id: 'all_subjects', title: 'Generalista SMR', desc: 'Completa un test que mezcle múltiples asignaturas.', condition: () => db.history.some(h => h.subjects.includes("Mezcla")) },
+    { id: 'custom_importer', title: 'Creador de Contenido', desc: 'Importa tus propias preguntas a la base de datos.', condition: () => db.questions.some(q => q.source === 'añadida') },
+    { id: 'favoritos_collector', title: 'Bibliotecario', desc: 'Guarda 50 o más preguntas en tus favoritos.', condition: () => db.starred.length >= 50 },
+    { id: 'achievement_collector', title: 'Coleccionista de Logros', desc: 'Desbloquea 10 logros académicos en total.', condition: () => db.unlockedAchievements.length >= 10 }
 ];
 
 
@@ -1648,77 +1662,115 @@ function shuffleArray(arr) {
 
 // LOAD & SAVE
 function preloadDefaultQuestions() {
-    // Intentamos cargar el archivo preguntas.json con las 1151 preguntas si existe, si no, cargamos el por defecto de HLC
-    fetch('preguntas.json')
-        .then(response => {
-            if (!response.ok) {
-                return fetch('preguntas_HCL_1780578960016.json');
-            }
-            return response;
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('No se pudo descargar ningún archivo de preguntas.');
-            }
-            return response.json();
-        })
-        .then(arr => {
-            if (Array.isArray(arr) || (arr && arr.questions)) {
-                let loadedCount = 0;
-                // Si viene de un backup exportado, puede ser un objeto con estructura {questions: [...]} o un array simple
-                const questionsArray = Array.isArray(arr) ? arr : (arr.questions || []);
+    const arr = window.ALL_QUESTIONS_DATA;
+    if (arr && (Array.isArray(arr) || arr.questions)) {
+        let loadedCount = 0;
+        const questionsArray = Array.isArray(arr) ? arr : (arr.questions || []);
+        
+        questionsArray.forEach(q => {
+            if (q.question && Array.isArray(q.options) && q.answer !== undefined) {
+                let finalSubject = q.subject || "Sin clasificar";
+                finalSubject = finalSubject
+                    .replace(/_\d+/g, '')
+                    .replace(/\s+\d+/g, '')
+                    .replace(/\d+/g, '')
+                    .replace(/_/g, ' ')
+                    .trim();
                 
-                questionsArray.forEach(q => {
-                    if (q.question && Array.isArray(q.options) && q.answer !== undefined) {
-                        let finalSubject = q.subject || "Sin clasificar";
-                        finalSubject = finalSubject
-                            .replace(/_\d+/g, '')
-                            .replace(/\s+\d+/g, '')
-                            .replace(/\d+/g, '')
-                            .replace(/_/g, ' ')
-                            .trim();
-                        
-                        finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
-                        
-                        if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
-                            finalSubject = "HLC (Horas de Libre Configuración)";
-                        }
-                        if (finalSubject.toLowerCase() === "sistemas operativos en red") {
-                            finalSubject = "Sistemas Operativos en Red";
-                        }
-                        if (finalSubject.toLowerCase() === "seguridad informática" || finalSubject.toLowerCase() === "seguridad informatica") {
-                            finalSubject = "Seguridad Informatica";
-                        }
+                finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
+                
+                if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
+                    finalSubject = "HLC (Horas de Libre Configuración)";
+                }
+                if (finalSubject.toLowerCase() === "sistemas operativos en red") {
+                    finalSubject = "Sistemas Operativos en Red";
+                }
+                if (finalSubject.toLowerCase() === "seguridad informática" || finalSubject.toLowerCase() === "seguridad informatica") {
+                    finalSubject = "Seguridad Informatica";
+                }
 
-                        // Evitar duplicados durante la precarga
-                        const normText = normalizeString(q.question);
-                        const exists = db.questions.some(item => normalizeString(item.question) === normText && item.subject === finalSubject);
+                // Evitar duplicados durante la precarga
+                const normText = normalizeString(q.question);
+                const exists = db.questions.some(item => normalizeString(item.question) === normText && item.subject === finalSubject);
 
-                        if (!exists) {
-                            db.questions.push({
-                                question: q.question,
-                                options: q.options,
-                                answer: q.answer,
-                                subject: finalSubject,
-                                source: q.source || "oficial"
-                            });
-                            loadedCount++;
-                        }
-                    }
-                });
-                db.indexPreloaded = true;
-                saveDatabase();
-                console.log(`Pre-cargadas ${loadedCount} preguntas.`);
-            } else {
-                db.indexPreloaded = true;
-                saveDatabase();
+                if (!exists) {
+                    db.questions.push({
+                        question: q.question,
+                        options: q.options,
+                        answer: q.answer,
+                        subject: finalSubject,
+                        source: q.source || "oficial"
+                    });
+                    loadedCount++;
+                }
             }
-            updateDashboardUI();
-        })
-        .catch(err => {
-            console.error('Error pre-cargando preguntas:', err);
-            updateDashboardUI();
         });
+        db.indexPreloaded = true;
+        saveDatabase();
+        console.log(`Pre-cargadas ${loadedCount} preguntas.`);
+    } else {
+        db.indexPreloaded = true;
+        saveDatabase();
+    }
+    updateDashboardUI();
+}
+
+function syncDatabaseWithFile() {
+    const arr = window.ALL_QUESTIONS_DATA;
+    if (!arr) return;
+    const questionsArray = Array.isArray(arr) ? arr : (arr.questions || []);
+    let updated = false;
+    
+    const existingMap = new Map();
+    db.questions.forEach(q => {
+        const key = `${normalizeString(q.question)}|${normalizeString(q.subject || '')}`;
+        existingMap.set(key, q);
+    });
+
+    questionsArray.forEach(q => {
+        if (q.question && Array.isArray(q.options) && q.answer !== undefined) {
+            let finalSubject = q.subject || "Sin clasificar";
+            finalSubject = finalSubject
+                .replace(/_\d+/g, '')
+                .replace(/\s+\d+/g, '')
+                .replace(/\d+/g, '')
+                .replace(/_/g, ' ')
+                .trim();
+            finalSubject = finalSubject.split(/\b(ud|uds|unidades|unidad|tema|temas)\b/i)[0].trim();
+            if (finalSubject.toUpperCase() === "HCL" || finalSubject.toUpperCase() === "HLC") {
+                finalSubject = "HLC (Horas de Libre Configuración)";
+            }
+            if (finalSubject.toLowerCase() === "sistemas operativos en red") {
+                finalSubject = "Sistemas Operativos en Red";
+            }
+            if (finalSubject.toLowerCase() === "seguridad informática" || finalSubject.toLowerCase() === "seguridad informatica") {
+                finalSubject = "Seguridad Informatica";
+            }
+
+            const key = `${normalizeString(q.question)}|${normalizeString(finalSubject)}`;
+            const existing = existingMap.get(key);
+            const fileSource = q.source || "oficial";
+            
+            if (!existing) {
+                db.questions.push({
+                    question: q.question,
+                    options: q.options,
+                    answer: q.answer,
+                    subject: finalSubject,
+                    source: fileSource
+                });
+                updated = true;
+            } else if (existing.source !== fileSource) {
+                existing.source = fileSource;
+                updated = true;
+            }
+        }
+    });
+
+    if (updated) {
+        saveDatabase();
+        console.log("Database synchronized with latest questions.");
+    }
 }
 
 function loadDatabase() {
@@ -1804,6 +1856,7 @@ function loadDatabase() {
         preloadDefaultQuestions();
     } else {
         updateDashboardUI();
+        syncDatabaseWithFile();
     }
     
     // Night Mode check on load
@@ -2075,6 +2128,8 @@ function populateSubjectsList() {
         pool = pool.filter(q => q.source === 'oficial');
     } else if (session.sourceFilter === 'repaso') {
         pool = pool.filter(q => q.source === 'repaso');
+    } else if (session.sourceFilter === 'añadida') {
+        pool = pool.filter(q => q.source === 'añadida');
     }
 
     let currentStarredCount = 0;
@@ -2235,10 +2290,24 @@ function renderAchievements() {
             if (ach.id === 'starred_25') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">auto_stories</span>';
             if (ach.id === 'perfect_exam') badgeIcon = '<span class="material-symbols-outlined" style="color: #a7f3d0;">school</span>';
             if (ach.id === 'speedrun') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">speed</span>';
+            
+            // NUEVOS ICONOS
+            if (ach.id === 'first_purchase') badgeIcon = '<span class="material-symbols-outlined" style="color: #60a5fa;">shopping_bag</span>';
+            if (ach.id === 'theme_hoarder') badgeIcon = '<span class="material-symbols-outlined" style="color: #a7f3d0;">palette</span>';
+            if (ach.id === 'rich_student') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">savings</span>';
+            if (ach.id === 'millionaire_capitalist') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">account_balance</span>';
+            if (ach.id === 'streak_30') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>';
+            if (ach.id === 'test_50') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">running_with_errors</span>';
+            if (ach.id === 'smart_master') badgeIcon = '<span class="material-symbols-outlined" style="color: #c084fc;">psychology_alt</span>';
+            if (ach.id === 'exam_veteran') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">history_edu</span>';
+            if (ach.id === 'all_subjects') badgeIcon = '<span class="material-symbols-outlined" style="color: #a5b4fc;">layers</span>';
+            if (ach.id === 'custom_importer') badgeIcon = '<span class="material-symbols-outlined" style="color: #34d399;">publish</span>';
+            if (ach.id === 'favoritos_collector') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">bookmarks</span>';
+            if (ach.id === 'achievement_collector') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">military_tech</span>';
         }
 
         card.innerHTML = `
-            <div class="badge-icon" style="font-size: 24px; margin-bottom: 8px; display: inline-flex; align-items: center; justify-content: center;">${badgeIcon}</div>
+            <div class="badge-icon">${badgeIcon}</div>
             <span class="badge-title">${ach.title}</span>
             <span class="badge-desc">${ach.desc}</span>
         `;
@@ -2379,6 +2448,7 @@ selectAllSubjectsBtn.addEventListener('click', () => {
     let pool = getAllQuestions();
     if (session.sourceFilter === 'oficial') pool = pool.filter(q => q.source === 'oficial');
     if (session.sourceFilter === 'repaso') pool = pool.filter(q => q.source === 'repaso');
+    if (session.sourceFilter === 'añadida') pool = pool.filter(q => q.source === 'añadida');
     session.selectedSubjects = Array.from(new Set(pool.map(q => q.subject || "Sin clasificar")));
     populateSubjectsList();
     validateStartButton();
@@ -2536,7 +2606,7 @@ function processFiles(files) {
                                     options: q.options,
                                     answer: q.answer,
                                     subject: finalSubject,
-                                    source: "oficial"
+                                    source: q.source || "añadida"
                                 });
                                 newCount++;
                             } else {
@@ -2571,6 +2641,7 @@ startTestBtn.addEventListener('click', () => {
     // Filter source
     if (session.sourceFilter === 'oficial') pool = pool.filter(q => q.source === 'oficial');
     if (session.sourceFilter === 'repaso') pool = pool.filter(q => q.source === 'repaso');
+    if (session.sourceFilter === 'añadida') pool = pool.filter(q => q.source === 'añadida');
 
     // Filter subjects
     if (session.selectedSubjects.includes('__starred__')) {
@@ -4160,7 +4231,9 @@ if (dismissRecBtn) {
     if (mobNavStudy) {
         mobNavStudy.addEventListener('click', () => {
             showScreen(studyScreen);
-            populateStudyGuide();
+            populateStudySubjects();
+            renderStudyList();
+            showCognitiveRec('theme-reading', 'Modo Lectura Prolongada', 'Para lecturas largas y evitar la fatiga ocular, recomendamos activar un tono cálido de fondo');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }

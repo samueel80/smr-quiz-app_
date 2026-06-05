@@ -1,4 +1,4 @@
-{
+window.ALL_QUESTIONS_DATA = {
   "questions": [
     {
       "question": "¿Qué consola se utiliza para configurar relaciones de confianza?",
@@ -16510,4 +16510,4 @@
   "streak": 0,
   "lastStudyDate": null,
   "questionStats": {}
-}
+};
