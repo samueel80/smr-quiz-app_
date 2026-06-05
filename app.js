@@ -1845,6 +1845,22 @@ function getYesterdayDateString() {
     return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
 }
 
+function closeAllModals() {
+    const customModal = document.getElementById('customModal');
+    const storeModal = document.getElementById('storeModal');
+    let closed = false;
+    if (storeModal && storeModal.style.display === 'flex') {
+        storeModal.style.display = 'none';
+        closed = true;
+    }
+    if (customModal && customModal.style.display === 'flex') {
+        customModal.style.display = 'none';
+        closed = true;
+    }
+    updateBodyScroll();
+    return closed;
+}
+
 // Helper: Toggle body scrolling based on open modals
 function updateBodyScroll() {
     const customModal = document.getElementById('customModal');
@@ -3069,6 +3085,7 @@ function showScreen(screen) {
     stopSpeaking();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
+    document.body.classList.toggle('test-active', screen && screen.id === 'testScreen');
     syncMobileBottomNav(screen);
 }
 
@@ -3597,12 +3614,42 @@ const STORE_PRODUCTS = [
     { id: 'phrase-cesur', category: 'phrase', title: '🎓 Orgullo Cesur 🎓', desc: 'Lema oficial para los alumnos de Cesur.', price: 100000 }
 ];
 
+const STORE_BODY_CLASSES = [
+    'theme-concentration', 'theme-memory', 'theme-reading', 'theme-night-cognitive', 'theme-sevilla', 'theme-malaga',
+    'font-inter', 'font-source-sans', 'font-atkinson', 'font-noto-sans',
+    'btn-futuristic', 'btn-pixel', 'btn-glow',
+    'dyslexia-active', 'high-concentration-active', 'intensive-study-active'
+];
+
+function disableFocusModes(showFeedback = true) {
+    let changed = false;
+    if (db.highConcentration) {
+        db.highConcentration = false;
+        changed = true;
+    }
+    if (db.intensiveStudy) {
+        db.intensiveStudy = false;
+        changed = true;
+    }
+    if (changed) {
+        saveDatabase();
+        applyStoreCustomizations();
+        if (showFeedback) {
+            showToast('Modo enfoque desactivado', 'Se han restaurado los controles normales de la interfaz.', 'visibility', 'success');
+        }
+    }
+}
+
+function updateFocusModeExitButton() {
+    const exitBtn = document.getElementById('exitFocusModeBtn');
+    if (!exitBtn) return;
+    const active = !!(db.highConcentration || db.intensiveStudy);
+    exitBtn.style.display = active ? 'inline-flex' : 'none';
+}
+
 // Apply Customization Classes to Body
 function applyStoreCustomizations() {
-    // Clear all customization classes
-    document.body.className = '';
-    
-    // Add current active classes
+    STORE_BODY_CLASSES.forEach(cls => document.body.classList.remove(cls));
     if (db.activeTheme && db.activeTheme !== 'classic') {
         document.body.classList.add(db.activeTheme);
     }
@@ -3679,21 +3726,27 @@ function applyStoreCustomizations() {
         `;
     }
     
-    // High Concentration Mode
+    // High Concentration Mode (solo durante un test activo)
     if (db.highConcentration) {
         document.body.classList.add('high-concentration-active');
         stylesText += `
-            body.high-concentration-active * {
+            body.high-concentration-active.test-active * {
                 animation: none !important;
                 transition: none !important;
             }
-            body.high-concentration-active .app-header,
-            body.high-concentration-active .stats-grid,
-            body.high-concentration-active .dashboard-footer-grid {
+            body.high-concentration-active.test-active .app-header,
+            body.high-concentration-active.test-active .stats-grid,
+            body.high-concentration-active.test-active .dashboard-footer-grid {
                 opacity: 0.15;
                 pointer-events: none;
             }
-            body.high-concentration-active #testScreen {
+            body.high-concentration-active.test-active #testScreen {
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+            body.high-concentration-active.test-active .header-controls #openStoreBtn,
+            body.high-concentration-active.test-active .header-controls #balanceBadge,
+            body.high-concentration-active.test-active .exit-focus-mode-btn {
                 opacity: 1 !important;
                 pointer-events: auto !important;
             }
@@ -3723,6 +3776,7 @@ function applyStoreCustomizations() {
     }
     
     styleEl.textContent = stylesText;
+    updateFocusModeExitButton();
 }
 
 let currentStoreCategory = 'theme';
@@ -4165,6 +4219,23 @@ if (dismissRecBtn) {
         localStorage.setItem('empleabilidadAlertDismissed', '1');
     });
 })();
+
+function bindFocusModeEscapeHatch() {
+    const exitFocusModeBtn = document.getElementById('exitFocusModeBtn');
+    if (exitFocusModeBtn) {
+        exitFocusModeBtn.addEventListener('click', () => disableFocusModes(true));
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (closeAllModals()) return;
+        if (db.highConcentration || db.intensiveStudy) {
+            disableFocusModes(true);
+        }
+    });
+}
+
+bindFocusModeEscapeHatch();
 
 // INITIAL STARTUP
 loadDatabase();
