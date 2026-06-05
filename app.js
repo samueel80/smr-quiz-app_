@@ -1295,7 +1295,15 @@ const ACHIEVEMENTS = [
     { id: 'starred_10', title: 'Coleccionista', desc: 'Guarda 10 o más preguntas favoritas.', condition: () => db.starred.length >= 10 },
     { id: 'repaso_master', title: 'Mente Curiosa', desc: 'Completa un test de solo repaso.', condition: () => db.history.some(h => h.mode !== 'smart' && h.subjects.includes("Repaso") || h.subjects === "Inglés" || h.subjects === "Digitalización") },
     { id: 'millionaire_play', title: 'Concursante', desc: 'Juega una partida de Quién Quiere Ser Millonario.', condition: () => (db.millionairePlayed || 0) > 0 },
-    { id: 'millionaire_win', title: 'Mente Millonaria', desc: 'Gana el premio máximo de 1.000.000 €.', condition: () => (db.millionaireWins || 0) > 0 }
+    { id: 'millionaire_win', title: 'Mente Millonaria', desc: 'Gana el premio máximo de 1.000.000 €.', condition: () => (db.millionaireWins || 0) > 0 },
+    { id: 'test_10', title: 'Constancia SMR', desc: 'Completa 10 cuestionarios en total.', condition: () => db.history.length >= 10 },
+    { id: 'correct_100', title: 'Sabio SMR', desc: 'Responde 100 preguntas correctamente en total.', condition: () => { let sum = 0; db.history.forEach(h => sum += (h.score || 0)); return sum >= 100; } },
+    { id: 'streak_15', title: 'Estudiante de Élite', desc: 'Alcanza una racha de 15 días de estudio.', condition: () => db.streak >= 15 },
+    { id: 'time_limit_win', title: 'Contra el Reloj', desc: 'Completa un test en Modo Examen con tiempo límite.', condition: () => db.history.some(h => h.mode === 'exam') },
+    { id: 'smart_mode_win', title: 'Inteligencia Artificial', desc: 'Completa un test en Modo Inteligente.', condition: () => db.history.some(h => h.mode === 'smart') },
+    { id: 'starred_25', title: 'Enciclopedia', desc: 'Guarda 25 o más preguntas favoritas.', condition: () => db.starred.length >= 25 },
+    { id: 'perfect_exam', title: 'Examen de Honor', desc: 'Consigue un 100% de aciertos en Modo Examen.', condition: () => db.history.some(h => h.mode === 'exam' && h.percent === 100) },
+    { id: 'speedrun', title: 'Velocidad Absoluta', desc: 'Completa un test de al menos 10 preguntas en menos de 60 segundos.', condition: () => db.history.some(h => h.total >= 10 && h.timeSpent && h.timeSpent <= 60) }
 ];
 
 
@@ -1698,6 +1706,13 @@ function loadDatabase() {
             if (db.indexPreloaded === undefined) db.indexPreloaded = false;
             if (db.millionaireWins === undefined) db.millionaireWins = 0;
             if (db.millionairePlayed === undefined) db.millionairePlayed = 0;
+            if (db.balance === undefined) db.balance = 0;
+            if (!db.purchasedThemes) db.purchasedThemes = ['classic'];
+            if (!db.activeTheme) db.activeTheme = 'classic';
+            if (!db.purchasedFonts) db.purchasedFonts = ['default'];
+            if (!db.activeFont) db.activeFont = 'default';
+            if (!db.purchasedButtons) db.purchasedButtons = ['default'];
+            if (!db.activeButton) db.activeButton = 'default';
             if (!Array.isArray(db.unlockedAchievements)) {
                 db.unlockedAchievements = [];
                 // Quietly pre-populate achievements based on current database stats
@@ -1707,6 +1722,7 @@ function loadDatabase() {
                     }
                 });
             }
+            applyStoreCustomizations();
 
 
             // Clean subject names automatically
@@ -1936,6 +1952,15 @@ function updateDashboardUI() {
     starredCount.textContent = db.starred.length;
     soundIcon.textContent = db.soundEnabled ? "volume_up" : "volume_off";
     streakCount.textContent = db.streak;
+    
+    const balanceCount = document.getElementById('balanceCount');
+    if (balanceCount) {
+        balanceCount.textContent = (db.balance || 0).toLocaleString('es-ES');
+    }
+    const storeBalanceLabel = document.getElementById('storeBalanceLabel');
+    if (storeBalanceLabel) {
+        storeBalanceLabel.textContent = (db.balance || 0).toLocaleString('es-ES');
+    }
 
     if (Array.isArray(db.history) && db.history.length > 0) {
         const sum = db.history.reduce((acc, curr) => acc + (curr.percent || 0), 0);
@@ -2103,6 +2128,14 @@ function renderAchievements() {
             if (ach.id === 'repaso_master') badgeIcon = '<span class="material-symbols-outlined" style="color: #c084fc;">psychology</span>';
             if (ach.id === 'millionaire_play') badgeIcon = '<span class="material-symbols-outlined" style="color: #10b981;">emoji_events</span>';
             if (ach.id === 'millionaire_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">monetization_on</span>';
+            if (ach.id === 'test_10') badgeIcon = '<span class="material-symbols-outlined" style="color: #60a5fa;">local_library</span>';
+            if (ach.id === 'correct_100') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">auto_awesome</span>';
+            if (ach.id === 'streak_15') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">military_tech</span>';
+            if (ach.id === 'time_limit_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">hourglass_empty</span>';
+            if (ach.id === 'smart_mode_win') badgeIcon = '<span class="material-symbols-outlined" style="color: #67e8f9;">neurology</span>';
+            if (ach.id === 'starred_25') badgeIcon = '<span class="material-symbols-outlined" style="color: #fbbf24;">auto_stories</span>';
+            if (ach.id === 'perfect_exam') badgeIcon = '<span class="material-symbols-outlined" style="color: #a7f3d0;">school</span>';
+            if (ach.id === 'speedrun') badgeIcon = '<span class="material-symbols-outlined" style="color: #f87171;">speed</span>';
         }
 
         card.innerHTML = `
@@ -2265,6 +2298,15 @@ document.querySelectorAll('#modeChips .chip-btn').forEach(btn => {
         btn.classList.add('active');
         session.mode = btn.dataset.value;
         examTimerGroup.style.display = session.mode === 'exam' ? 'flex' : 'none';
+        
+        const descEl = document.getElementById('modeDescription');
+        if (session.mode === 'practice') {
+            descEl.textContent = 'Modo Práctica: Sin límite de tiempo, pistas de ayuda habilitadas y corrección inmediata.';
+        } else if (session.mode === 'exam') {
+            descEl.textContent = 'Modo Examen: Con tiempo límite configurable, sin pistas de ayuda y corrección al finalizar el test.';
+        } else if (session.mode === 'smart') {
+            descEl.textContent = 'Modo Inteligente: Cuestionario adaptativo que prioriza las preguntas falladas y las no contestadas aún.';
+        }
     });
 });
 
@@ -2304,7 +2346,19 @@ backupFileInput.addEventListener('change', (e) => {
                 const parsed = JSON.parse(event.target.result);
                 if (parsed.questions && parsed.starred && parsed.history) {
                     db = parsed;
+                    
+                    // Safety migration checks for imported progress copies
+                    if (db.balance === undefined) db.balance = 0;
+                    if (!db.purchasedThemes) db.purchasedThemes = ['classic'];
+                    if (!db.activeTheme) db.activeTheme = 'classic';
+                    if (!db.purchasedFonts) db.purchasedFonts = ['default'];
+                    if (!db.activeFont) db.activeFont = 'default';
+                    if (!db.purchasedButtons) db.purchasedButtons = ['default'];
+                    if (!db.activeButton) db.activeButton = 'default';
+                    if (!db.unlockedAchievements) db.unlockedAchievements = [];
+                    
                     saveDatabase();
+                    applyStoreCustomizations();
                     showCustomAlert('Copia Restaurada', '¡Copia de seguridad restaurada correctamente!', 'check_circle');
                 } else {
                     showCustomAlert('Formato Incorrecto', 'Formato de copia no válido.', 'error');
@@ -3297,12 +3351,13 @@ millLifelinePhone.addEventListener('click', () => {
     playSound('correct');
 });
 
-// EXIT ACTIVE GAME
 exitMillionaireBtn.addEventListener('click', () => {
     const currentPrize = millSession.currentIndex > 0 ? millSession.prizeLadder[millSession.currentIndex - 1] : "0 €";
     showCustomConfirm('Retirarse del Juego', `¿Deseas retirarte del juego y llevarte el premio acumulado actual de ${currentPrize}?`, 'payments').then(confirmed => {
         if (confirmed) {
             showCustomAlert('Juego Terminado', `¡Enhorabuena! Te has retirado con un premio de: ${currentPrize} 💰`, 'emoji_events').then(() => {
+                const prizeAmount = getPrizeValue(currentPrize);
+                db.balance = (db.balance || 0) + prizeAmount;
                 db.millionairePlayed = (db.millionairePlayed || 0) + 1;
                 updateStreakAndStudy();
                 checkNewAchievements();
@@ -3337,10 +3392,11 @@ function checkMillionaireAnswer(selected, selectedElement) {
             if (millSession.currentIndex === 14) {
                 db.millionaireWins = (db.millionaireWins || 0) + 1;
                 db.millionairePlayed = (db.millionairePlayed || 0) + 1;
+                db.balance = (db.balance || 0) + 1000000;
                 updateStreakAndStudy();
                 startConfetti();
                 checkNewAchievements();
-                showCustomAlert('🎉 ¡INCREÍBLE! 🎉', '¡Has contestado correctamente las 15 preguntas y has ganado el MILLÓN DE EUROS VIRTUAL de SMR Test Prep! 🏆💰', 'workspace_premium').then(() => {
+                showCustomAlert('🎉 ¡INCREÍBLE! 🎉', '¡Has contestado correctamente las 15 preguntas y has ganado el MILLÓN DE EUROS VIRTUAL del Plan de Estudios SMR! 🏆💰', 'workspace_premium').then(() => {
                     showScreen(dashboardScreen);
                     updateDashboardUI();
                 });
@@ -3369,6 +3425,8 @@ function checkMillionaireAnswer(selected, selectedElement) {
         }
         
         setTimeout(() => {
+            const prizeAmount = getPrizeValue(safePrize);
+            db.balance = (db.balance || 0) + prizeAmount;
             db.millionairePlayed = (db.millionairePlayed || 0) + 1;
             updateStreakAndStudy();
             checkNewAchievements();
@@ -3378,6 +3436,225 @@ function checkMillionaireAnswer(selected, selectedElement) {
             });
         }, 2000);
     }
+}
+
+// Utility: convert prize string to integer
+function getPrizeValue(prizeStr) {
+    if (!prizeStr) return 0;
+    const cleaned = prizeStr.replace(/[^0-9]/g, '');
+    return parseInt(cleaned, 10) || 0;
+}
+
+// Shop Products Definition
+const STORE_PRODUCTS = [
+    // Themes
+    { id: 'theme-classic', category: 'theme', title: 'Clásico Profesional', desc: 'El tema por defecto de la web en tonos Azul y Rojo.', price: 0 },
+    { id: 'theme-cyber-forest', category: 'theme', title: 'Bosque Cyberpunk 🌲', desc: 'Tema en tonos verde esmeralda y menta.', price: 5000 },
+    { id: 'theme-purple-sunset', category: 'theme', title: 'Atardecer Púrpura 🌌', desc: 'Tema en tonos violeta vibrante y coral.', price: 15000 },
+    { id: 'theme-royal-gold', category: 'theme', title: 'Oro Premium 👑', desc: 'Estética en dorado mate y bronce.', price: 100000 },
+    { id: 'theme-matrix', category: 'theme', title: 'Código Matrix 🟢', desc: 'Siente que hackeas el sistema de preguntas en verde puro.', price: 500000 },
+    { id: 'theme-malaga', category: 'theme', title: 'Málaga Especial 🌅', desc: 'Diseño en azul mediterráneo del Málaga pa el mundo.', price: 2000000 },
+
+    // Fonts
+    { id: 'font-default', category: 'font', title: 'Outfit & Jakarta', desc: 'Tipografía de la interfaz estándar.', price: 0 },
+    { id: 'font-inter', category: 'font', title: 'Inter Moderna', desc: 'Tipografía técnica muy limpia y profesional.', price: 10000 },
+    { id: 'font-playfair', category: 'font', title: 'Playfair Clásica', desc: 'Tipografía elegante con serifa romana.', price: 50000 },
+    { id: 'font-space-mono', category: 'font', title: 'Espacio Mono 💻', desc: 'Tipografía estilo consola de comandos.', price: 200000 },
+    { id: 'font-cinzel', category: 'font', title: 'Cinzel Imperial', desc: 'Estilo clásico imperial para mentes de élite.', price: 1000000 },
+
+    // Buttons
+    { id: 'btn-default', category: 'button', title: 'Botón Redondeado', desc: 'Estilo de botones estándar.', price: 0 },
+    { id: 'btn-futuristic', category: 'button', title: 'Botón Futurista', desc: 'Bordes rectos con sombreado de neón sutil.', price: 25000 },
+    { id: 'btn-pixel', category: 'button', title: 'Estilo Retro Pixel 👾', desc: 'Botones cuadrados con borde grueso y estilo arcade.', price: 150000 },
+    { id: 'btn-glow', category: 'button', title: 'Ultra Resplandor ✨', desc: 'Botones con animación de pulso luminosa constante.', price: 1000000 }
+];
+
+// Apply Customization Classes to Body
+function applyStoreCustomizations() {
+    // Clear all customization classes
+    document.body.className = '';
+    
+    // Add current active classes
+    if (db.activeTheme && db.activeTheme !== 'classic') {
+        document.body.classList.add(db.activeTheme);
+    }
+    if (db.activeFont && db.activeFont !== 'default') {
+        document.body.classList.add(db.activeFont);
+    }
+    if (db.activeButton && db.activeButton !== 'default') {
+        document.body.classList.add(db.activeButton);
+    }
+}
+
+let currentStoreCategory = 'theme';
+
+// Render Shop UI by Category
+function renderStore() {
+    const storeGrid = document.getElementById('storeGrid');
+    if (!storeGrid) return;
+    storeGrid.innerHTML = '';
+    
+    const filtered = STORE_PRODUCTS.filter(p => p.category === currentStoreCategory);
+    
+    filtered.forEach(p => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'store-item';
+        
+        let isPurchased = false;
+        let isActive = false;
+        
+        if (p.category === 'theme') {
+            isPurchased = db.purchasedThemes.includes(p.id);
+            isActive = db.activeTheme === p.id || (p.id === 'theme-classic' && db.activeTheme === 'classic');
+        } else if (p.category === 'font') {
+            isPurchased = db.purchasedFonts.includes(p.id);
+            isActive = db.activeFont === p.id || (p.id === 'font-default' && db.activeFont === 'default');
+        } else if (p.category === 'button') {
+            isPurchased = db.purchasedButtons.includes(p.id);
+            isActive = db.activeButton === p.id || (p.id === 'btn-default' && db.activeButton === 'default');
+        }
+        
+        let btnText = 'Comprar';
+        let btnClass = 'btn primary-btn store-item-btn';
+        
+        if (isActive) {
+            btnText = 'Activo';
+            btnClass = 'btn success-btn store-item-btn';
+        } else if (isPurchased) {
+            btnText = 'Activar';
+            btnClass = 'btn secondary-btn store-item-btn';
+        }
+        
+        const priceLabel = p.price === 0 ? 'Gratis' : `${p.price.toLocaleString('es-ES')} €`;
+        
+        itemCard.innerHTML = `
+            <div class="store-item-info">
+                <span class="store-item-title">${p.title}</span>
+                <span class="store-item-desc">${p.desc}</span>
+                <span class="store-item-price">${priceLabel}</span>
+            </div>
+            <button class="${btnClass}" data-id="${p.id}" ${isActive ? 'disabled' : ''}>${btnText}</button>
+        `;
+        
+        // Button Event Listener
+        itemCard.querySelector('button').addEventListener('click', () => {
+            handleStoreAction(p, isPurchased);
+        });
+        
+        storeGrid.appendChild(itemCard);
+    });
+}
+
+// Handle Shop Purchases or Activations
+function handleStoreAction(product, isPurchased) {
+    if (isPurchased || product.price === 0) {
+        // Activate product
+        if (product.category === 'theme') {
+            db.activeTheme = product.id === 'theme-classic' ? 'classic' : product.id;
+        } else if (product.category === 'font') {
+            db.activeFont = product.id === 'font-default' ? 'default' : product.id;
+        } else if (product.category === 'button') {
+            db.activeButton = product.id === 'btn-default' ? 'default' : product.id;
+        }
+        saveDatabase();
+        applyStoreCustomizations();
+        renderStore();
+        showToast('Personalización Aplicada 🎨', `Se ha activado el estilo "${product.title}" correctamente.`, 'palette', 'success');
+    } else {
+        // Purchase product
+        if ((db.balance || 0) < product.price) {
+            showCustomAlert('Saldo Insuficiente', `No tienes suficiente saldo virtual para comprar "${product.title}". ¡Sigue jugando al Millonario! 💸`, 'dangerous');
+            return;
+        }
+        
+        showCustomConfirm('Confirmar Compra', `¿Deseas gastar ${product.price.toLocaleString('es-ES')} € para desbloquear "${product.title}"?`, 'shopping_cart').then(confirmed => {
+            if (confirmed) {
+                db.balance -= product.price;
+                if (product.category === 'theme') {
+                    db.purchasedThemes.push(product.id);
+                } else if (product.category === 'font') {
+                    db.purchasedFonts.push(product.id);
+                } else if (product.category === 'button') {
+                    db.purchasedButtons.push(product.id);
+                }
+                saveDatabase();
+                renderStore();
+                showToast('¡Compra Completada! 🛒', `Has desbloqueado "${product.title}" con éxito.`, 'shopping_bag', 'success');
+            }
+        });
+    }
+}
+
+// Bind Store Modals Open/Close & Tabs switching
+const storeModal = document.getElementById('storeModal');
+const balanceBadge = document.getElementById('balanceBadge');
+const openStoreBtn = document.getElementById('openStoreBtn');
+const closeStoreBtn = document.getElementById('closeStoreBtn');
+
+function openStore() {
+    if (storeModal) {
+        storeModal.style.display = 'flex';
+        currentStoreCategory = 'theme';
+        // Reset tab buttons state
+        document.querySelectorAll('#storeTabs .chip-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === 'theme');
+        });
+        renderStore();
+    }
+}
+
+if (balanceBadge) {
+    balanceBadge.addEventListener('click', openStore);
+}
+if (openStoreBtn) {
+    openStoreBtn.addEventListener('click', openStore);
+}
+if (closeStoreBtn && storeModal) {
+    closeStoreBtn.addEventListener('click', () => {
+        storeModal.style.display = 'none';
+    });
+}
+
+// Store Tabs click listeners
+document.querySelectorAll('#storeTabs .chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#storeTabs .chip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStoreCategory = btn.dataset.category;
+        renderStore();
+    });
+});
+
+// DEVELOPER EASTER EGG (Triggered by 5 clicks on logo area in < 3 seconds)
+let developerClicks = 0;
+let developerClicksTimeout = null;
+const devTrigger = document.querySelector('.logo-area'); // Trigger on header title clicks
+if (devTrigger) {
+    devTrigger.style.cursor = 'pointer';
+    devTrigger.addEventListener('click', () => {
+        developerClicks++;
+        clearTimeout(developerClicksTimeout);
+        developerClicksTimeout = setTimeout(() => {
+            developerClicks = 0;
+        }, 3000);
+        
+        if (developerClicks >= 5) {
+            developerClicks = 0;
+            // Activate developer cheat code!
+            db.balance = (db.balance || 0) + 5000000;
+            // Buy all products automatically
+            STORE_PRODUCTS.forEach(p => {
+                if (p.category === 'theme' && !db.purchasedThemes.includes(p.id)) db.purchasedThemes.push(p.id);
+                if (p.category === 'font' && !db.purchasedFonts.includes(p.id)) db.purchasedFonts.push(p.id);
+                if (p.category === 'button' && !db.purchasedButtons.includes(p.id)) db.purchasedButtons.push(p.id);
+            });
+            saveDatabase();
+            applyStoreCustomizations();
+            playSound('victory');
+            startConfetti();
+            showCustomAlert('🛠️ MODO DESARROLLADOR 🛠️', '¡Easter Egg activado! Has obtenido 5.000.000 € virtuales y has desbloqueado toda la tienda de personalización de Málaga para el mundo.', 'terminal');
+        }
+    });
 }
 
 // INITIAL STARTUP

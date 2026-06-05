@@ -1,30 +1,30 @@
 /* PREMIUM CSS DESIGN SYSTEM - SMR QUIZ APP */
 :root {
-    --bg-main: #080d1a;
-    --bg-card: #0f172a;
-    --bg-card-hover: #1e293b;
-    --border-color: #1e293b;
-    --border-glow: rgba(99, 102, 241, 0.2);
-    --text-main: #f8fafc;
-    --text-muted: #64748b;
-    --text-glow: #e2e8f0;
+    --bg-main: #0b0f19;
+    --bg-card: #111827;
+    --bg-card-hover: #1f2937;
+    --border-color: #1f2937;
+    --border-glow: rgba(37, 99, 235, 0.35);
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --text-glow: #f3f4f6;
     
-    /* Vibrant gradients & colors */
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    --primary-glow: rgba(99, 102, 241, 0.15);
+    /* Vibrant gradients & colors - Blue and Red Professional scheme */
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    --primary-glow: rgba(37, 99, 235, 0.15);
     
-    --success: #10b981;
-    --success-bg: rgba(16, 185, 129, 0.1);
-    --success-border: rgba(16, 185, 129, 0.3);
+    --success: #3b82f6;
+    --success-bg: rgba(59, 130, 246, 0.1);
+    --success-border: rgba(59, 130, 246, 0.3);
     
-    --danger: #f43f5e;
-    --danger-bg: rgba(244, 63, 94, 0.1);
-    --danger-border: rgba(244, 63, 94, 0.3);
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.1);
+    --danger-border: rgba(220, 38, 38, 0.3);
     
-    --warning: #eab308;
-    --warning-bg: rgba(234, 179, 8, 0.1);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.1);
     
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
@@ -86,7 +86,7 @@ body {
 .orb-2 {
     width: 450px;
     height: 450px;
-    background: #4f46e5;
+    background: #dc2626;
     bottom: -10%;
     right: -10%;
     animation-duration: 28s;
@@ -94,7 +94,7 @@ body {
 .orb-3 {
     width: 300px;
     height: 300px;
-    background: var(--success);
+    background: var(--primary);
     top: 45%;
     left: 45%;
     transform: translate(-50%, -50%);
@@ -172,21 +172,21 @@ body {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 6px;
 }
 
 .control-btn {
     background: rgba(30, 41, 59, 0.6);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
     transition: var(--transition);
 }
 
@@ -200,9 +200,9 @@ body {
     background: var(--primary-glow);
     border: 1px solid rgba(99, 102, 241, 0.4);
     color: #c7d2fe;
-    padding: 8px 18px;
+    padding: 6px 10px;
     border-radius: 50px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -256,10 +256,10 @@ body {
     font-size: 22px;
 }
 
-.stat-icon-wrapper.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.stat-icon-wrapper.yellow { background: rgba(234, 179, 8, 0.1); color: #eab308; }
-.stat-icon-wrapper.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.stat-icon-wrapper.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.stat-icon-wrapper.blue { background: rgba(37, 99, 235, 0.1); color: #3b82f6; }
+.stat-icon-wrapper.yellow { background: rgba(220, 38, 38, 0.1); color: #ef4444; }
+.stat-icon-wrapper.green { background: rgba(37, 99, 235, 0.1); color: #3b82f6; }
+.stat-icon-wrapper.purple { background: rgba(220, 38, 38, 0.1); color: #ef4444; }
 
 .stat-info {
     display: flex;
@@ -672,6 +672,44 @@ body {
     background: var(--primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.control-btn {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.control-btn:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.stats-badge {
+    background: var(--primary-glow);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #c7d2fe;
+    padding: 6px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .secondary-btn {
@@ -1253,6 +1291,23 @@ body {
     background: rgba(234, 179, 8, 0.2);
     transform: translateY(-2px);
 }
+.start-actions-info {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-top: -4px;
+    margin-bottom: 8px;
+}
+.start-actions-info span {
+    flex: 1.5;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.35;
+}
+.start-actions-info span:last-child {
+    flex: 1;
+}
 
 /* BACKUP ACTIONS */
 .backup-actions {
@@ -1392,25 +1447,48 @@ body {
     }
     .app-header {
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
         align-items: center;
         text-align: center;
-        padding: 16px;
+        padding: 12px;
+    }
+    .logo-area {
+        gap: 8px !important;
+    }
+    .logo-area h1 {
+        font-size: 1.25rem !important;
+    }
+    .logo-area div:first-child {
+        width: 36px !important;
+        height: 36px !important;
     }
     .header-controls {
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
         width: 100%;
-        gap: 10px;
+        gap: 8px;
     }
     .study-nav-btn {
         order: 3;
-        width: 100%;
+        flex: 1 1 calc(50% - 4px);
         margin-top: 4px;
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+        justify-content: center;
+        display: inline-flex;
     }
-    .stats-badge {
-        padding: 6px 14px;
+    .study-nav-btn#millionaireGameBtn {
+        flex: 1 1 100%;
+    }
+    .streak-badge, .stats-badge {
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+    }
+    .control-btn {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 15px !important;
     }
     
     /* Stats grid */
@@ -1447,12 +1525,21 @@ body {
         padding: 12px;
     }
 
-    /* Start action button row */
     .start-actions-row {
         flex-direction: column;
     }
     .start-actions-row .start-btn, .start-actions-row .challenge-btn {
         width: 100%;
+    }
+    .start-actions-info {
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 4px;
+        margin-bottom: 12px;
+    }
+    .start-actions-info span {
+        width: 100%;
+        text-align: center;
     }
 
     /* Backup Buttons */
@@ -1509,6 +1596,26 @@ body {
     .test-navigation {
         margin-top: 24px;
         padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    
+    /* Modals adjustment for smaller screens */
+    .custom-modal-content {
+        padding: 16px !important;
+        gap: 12px !important;
+        width: 95% !important;
+    }
+    .custom-modal-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    .store-grid {
+        max-height: 280px !important;
+        gap: 10px !important;
+    }
+    .store-item {
+        padding: 12px !important;
+        gap: 8px !important;
     }
 }
 
@@ -1648,4 +1755,192 @@ body {
 @keyframes pulse-gold {
     from { transform: scale(1); filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4)); }
     to { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)); }
+}
+
+/* --- STORE CUSTOMIZATION THEMES --- */
+/* Cyber Forest Theme */
+body.theme-cyber-forest {
+    --bg-main: #062f22;
+    --bg-card: #064e3b;
+    --bg-card-hover: #047857;
+    --border-color: #047857;
+    --border-glow: rgba(16, 185, 129, 0.4);
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --success: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.1);
+    --success-border: rgba(52, 211, 153, 0.3);
+    --danger: #ef4444;
+}
+
+/* Purple Sunset Theme */
+body.theme-purple-sunset {
+    --bg-main: #1e1b4b;
+    --bg-card: #312e81;
+    --bg-card-hover: #4338ca;
+    --border-color: #4338ca;
+    --border-glow: rgba(139, 92, 246, 0.4);
+    --primary: #8b5cf6;
+    --primary-hover: #7c3aed;
+    --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --success: #ec4899;
+    --success-bg: rgba(236, 72, 153, 0.1);
+    --success-border: rgba(236, 72, 153, 0.3);
+    --danger: #f43f5e;
+}
+
+/* Royal Gold Theme */
+body.theme-royal-gold {
+    --bg-main: #1c1917;
+    --bg-card: #292524;
+    --bg-card-hover: #44403c;
+    --border-color: #44403c;
+    --border-glow: rgba(217, 119, 6, 0.4);
+    --primary: #d97706;
+    --primary-hover: #b45309;
+    --primary-gradient: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    --success: #eab308;
+    --success-bg: rgba(234, 179, 8, 0.1);
+    --success-border: rgba(234, 179, 8, 0.3);
+    --danger: #ef4444;
+}
+
+/* Matrix (Retro Hacker) Theme */
+body.theme-matrix {
+    --bg-main: #000000;
+    --bg-card: #0c0c0c;
+    --bg-card-hover: #1a1a1a;
+    --border-color: #00ff00;
+    --border-glow: rgba(0, 255, 0, 0.5);
+    --primary: #00ff00;
+    --primary-hover: #00dd00;
+    --primary-gradient: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
+    --success: #00ff00;
+    --success-bg: rgba(0, 255, 0, 0.08);
+    --success-border: rgba(0, 255, 0, 0.3);
+    --danger: #ff0000;
+    --text-main: #00ff00;
+    --text-muted: #008800;
+    --text-glow: #00ff00;
+}
+
+/* Málaga Edición Especial Theme */
+body.theme-malaga {
+    --bg-main: #081626;
+    --bg-card: #0f2a4a;
+    --bg-card-hover: #174273;
+    --border-color: #174273;
+    --border-glow: rgba(56, 189, 248, 0.4);
+    --primary: #0284c7;
+    --primary-hover: #0369a1;
+    --primary-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    --success: #38bdf8;
+    --success-bg: rgba(56, 189, 248, 0.1);
+    --success-border: rgba(56, 189, 248, 0.3);
+    --danger: #ef4444;
+}
+
+/* --- FONTS --- */
+body.font-inter {
+    font-family: 'Inter', sans-serif !important;
+}
+body.font-inter h1, body.font-inter h2, body.font-inter h3, body.font-inter h4 {
+    font-family: 'Inter', sans-serif !important;
+}
+
+body.font-playfair {
+    font-family: 'Playfair Display', serif !important;
+}
+body.font-playfair h1, body.font-playfair h2, body.font-playfair h3, body.font-playfair h4 {
+    font-family: 'Playfair Display', serif !important;
+}
+
+body.font-space-mono {
+    font-family: 'Space Mono', monospace !important;
+}
+body.font-space-mono h1, body.font-space-mono h2, body.font-space-mono h3, body.font-space-mono h4 {
+    font-family: 'Space Mono', monospace !important;
+}
+
+body.font-cinzel {
+    font-family: 'Cinzel', serif !important;
+}
+body.font-cinzel h1, body.font-cinzel h2, body.font-cinzel h3, body.font-cinzel h4 {
+    font-family: 'Cinzel', serif !important;
+}
+
+/* --- BUTTONS --- */
+body.btn-futuristic .btn {
+    box-shadow: 0 0 12px var(--primary-glow);
+    border-radius: 4px !important;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+body.btn-pixel .btn {
+    border-radius: 0px !important;
+    border: 2px solid var(--primary) !important;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+body.btn-pixel .btn.primary-btn {
+    background: var(--primary) !important;
+    color: white !important;
+}
+body.btn-glow .btn {
+    animation: btnGlowPulse 2s infinite alternate;
+}
+@keyframes btnGlowPulse {
+    from { box-shadow: 0 0 8px rgba(37, 99, 235, 0.3); }
+    to { box-shadow: 0 0 20px rgba(37, 99, 235, 0.7); }
+}
+
+/* --- STORE MODAL STYLES --- */
+.store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+.store-item {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+}
+.store-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.store-item-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.store-item-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.store-item-price {
+    font-size: 0.85rem;
+    color: #fbbf24;
+    font-weight: 700;
+}
+.store-item-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
 }
