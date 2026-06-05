@@ -1503,28 +1503,34 @@ function resetSpeakActiveBtn() {
     }
 }
 function speakText(text, onEndCallback) {
-    if ('speechSynthesis' in window) {
-        if (currentUtterance) {
-            currentUtterance.onend = null;
-            currentUtterance.onerror = null;
-        }
-        window.speechSynthesis.cancel();
+    if (!('speechSynthesis' in window)) return;
+    // Null out callbacks on any existing utterance before cancelling,
+    // so the browser's async 'onend' (fired after cancel) doesn't trigger a re-speak.
+    if (currentUtterance) {
+        currentUtterance.onend = null;
+        currentUtterance.onerror = null;
+        currentUtterance = null;
+    }
+    window.speechSynthesis.cancel();
+    // Chrome/Safari bug: need a small delay after cancel() before speaking again,
+    // otherwise the new utterance gets silently swallowed or triggers a loop.
+    setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'es-ES';
         utterance.rate = 1.05;
-        
         utterance.onend = () => {
-            currentUtterance = null;
+            if (currentUtterance === utterance) currentUtterance = null;
             if (onEndCallback) onEndCallback();
         };
-        utterance.onerror = () => {
-            currentUtterance = null;
+        utterance.onerror = (e) => {
+            // 'canceled' errors are expected when we stop manually — do NOT call onEndCallback
+            if (e.error === 'canceled' || e.error === 'interrupted') return;
+            if (currentUtterance === utterance) currentUtterance = null;
             if (onEndCallback) onEndCallback();
         };
-        
-        window.speechSynthesis.speak(utterance);
         currentUtterance = utterance;
-    }
+        window.speechSynthesis.speak(utterance);
+    }, 150);
 }
 function resetAllStudySpeakBtns() {
     document.querySelectorAll('.study-speak-btn').forEach(btn => {
@@ -1535,6 +1541,7 @@ function resetAllStudySpeakBtns() {
     });
 }
 function stopSpeaking() {
+    // Null out callbacks FIRST so the async 'onend' fired by cancel() is ignored
     if (currentUtterance) {
         currentUtterance.onend = null;
         currentUtterance.onerror = null;
@@ -1906,12 +1913,76 @@ function loadDatabase() {
             showCognitiveRec('theme-night-cognitive', 'Modo Nocturno Cognitivo', 'Es de noche. Para evitar deslumbramiento nocturno y proteger tus ritmos de sueño, sugerimos el Modo Nocturno');
         }, 1000);
     }
+
+    // Restore active test session if it exists
+    setTimeout(() => {
+        restoreTestSession();
+    }, 800);
 }
 
 function saveDatabase() {
     cachedAllQuestions = null;
     localStorage.setItem('smr_questions_db_pro', JSON.stringify(db));
     updateDashboardUI();
+}
+
+function saveTestSession() {
+    if (session && session.questions && session.questions.length > 0) {
+        const sessionToSave = {
+            questions: session.questions,
+            currentIndex: session.currentIndex,
+            answers: session.answers,
+            mode: session.mode,
+            timeLimit: session.timeLimit,
+            timeRemaining: session.timeRemaining,
+            timeSpent: session.timeSpent,
+            selectedSubjects: session.selectedSubjects,
+            sourceFilter: session.sourceFilter
+        };
+        localStorage.setItem('active_test_session', JSON.stringify(sessionToSave));
+    }
+}
+
+function clearTestSession() {
+    localStorage.removeItem('active_test_session');
+}
+
+function restoreTestSession() {
+    const saved = localStorage.getItem('active_test_session');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.questions && parsed.questions.length > 0) {
+                session.questions = parsed.questions;
+                session.currentIndex = parsed.currentIndex || 0;
+                session.answers = parsed.answers || {};
+                session.mode = parsed.mode || 'practice';
+                session.timeLimit = parsed.timeLimit || 20;
+                session.timeRemaining = parsed.timeRemaining || 0;
+                session.timeSpent = parsed.timeSpent || 0;
+                session.selectedSubjects = parsed.selectedSubjects || [];
+                session.sourceFilter = parsed.sourceFilter || 'all';
+
+                showCustomConfirm(
+                    'Reanudar Test',
+                    'Hemos detectado un cuestionario que no terminaste. ¿Deseas reanudarlo desde donde te quedaste?',
+                    'history'
+                ).then(confirmed => {
+                    if (confirmed) {
+                        showScreen(testScreen);
+                        setHeaderNavigationBlocked(true);
+                        setupTimer(true); // Restore timer state
+                        renderQuestion();
+                    } else {
+                        clearTestSession();
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Error restoring session:", e);
+            clearTestSession();
+        }
+    }
 }
 
 // Streak validity checker
@@ -2813,6 +2884,8 @@ startTestBtn.addEventListener('click', () => {
     session.answers = {};
     session.timeSpent = 0;
 
+    saveTestSession();
+
     showScreen(testScreen);
     setHeaderNavigationBlocked(true);
     setupTimer();
@@ -2841,6 +2914,8 @@ quickChallengeBtn.addEventListener('click', () => {
     session.mode = 'exam';
     session.timeLimit = 3.5; // 210 seconds total
 
+    saveTestSession();
+
     showScreen(testScreen);
     setHeaderNavigationBlocked(true);
     setupTimer();
@@ -2849,18 +2924,21 @@ quickChallengeBtn.addEventListener('click', () => {
 });
 
 // TIMER
-function setupTimer() {
+function setupTimer(isRestore = false) {
     clearInterval(session.timerInterval);
     testTimer.classList.remove('warning-pulse');
     if (session.mode === 'exam') {
         testTimer.style.display = 'inline-block';
-        session.timeRemaining = Math.round(session.timeLimit * 60);
+        if (!isRestore) {
+            session.timeRemaining = Math.round(session.timeLimit * 60);
+        }
         updateTimerDisplay();
 
         session.timerInterval = setInterval(() => {
             session.timeRemaining--;
             session.timeSpent++;
             updateTimerDisplay();
+            saveTestSession();
             
             if (session.timeRemaining <= 10 && session.timeRemaining > 0) {
                 testTimer.classList.add('warning-pulse');
@@ -2881,6 +2959,7 @@ function setupTimer() {
         testTimer.style.display = 'none';
         session.timerInterval = setInterval(() => {
             session.timeSpent++;
+            saveTestSession();
         }, 1000);
     }
 }
@@ -2950,6 +3029,8 @@ function renderQuestion() {
             session.answers[session.currentIndex] = opt;
             document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
             btn.classList.add('selected');
+            
+            saveTestSession();
 
             if (session.mode === 'practice') {
                 applyFeedbackUI(btn, opt, q.answer);
@@ -3001,12 +3082,14 @@ function showExplanationBox(correctText) {
 prevBtn.addEventListener('click', () => {
     if (session.currentIndex > 0) {
         session.currentIndex--;
+        saveTestSession();
         renderQuestion();
     }
 });
 nextBtn.addEventListener('click', () => {
     if (session.currentIndex < session.questions.length - 1) {
         session.currentIndex++;
+        saveTestSession();
         renderQuestion();
     }
 });
@@ -3051,11 +3134,12 @@ speakActiveBtn.addEventListener('click', () => {
     });
 });
 exitTestBtn.addEventListener('click', () => {
-    showCustomConfirm('Salir del Test', '¿Estás seguro de que deseas salir del test? Tu progreso actual se perderá.', 'warning').then(confirmed => {
+    showCustomConfirm('Salir del Test', '¿Deseas salir? Tu progreso se guardará automáticamente para que puedas retomarlo después.', 'history').then(confirmed => {
         if (confirmed) {
             clearInterval(session.timerInterval);
             setHeaderNavigationBlocked(false);
             stopSpeaking();
+            // Progress is already saved in saveTestSession() — just leave it so the user can resume
             showScreen(dashboardScreen);
             updateDashboardUI();
         }
@@ -3066,6 +3150,7 @@ exitTestBtn.addEventListener('click', () => {
 function finishTest() {
     clearInterval(session.timerInterval);
     setHeaderNavigationBlocked(false);
+    clearTestSession(); // Test completed — remove saved session so it doesn't offer resume next time
     let correct = 0;
     
     session.questions.forEach((q, idx) => {
