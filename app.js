@@ -4776,6 +4776,29 @@ if (dismissRecBtn) {
     });
 })();
 
+// EXAMS FINISHED ALERT DISMISS
+(function setupExamsFinishedAlert() {
+    const alert = document.getElementById('examsFinishedAlert');
+    const btn = document.getElementById('dismissExamsFinishedAlert');
+    if (!alert || !btn) return;
+
+    // Hide if previously dismissed
+    if (localStorage.getItem('examsFinishedAlertDismissed') === '1') {
+        alert.style.display = 'none';
+    }
+
+    btn.addEventListener('click', () => {
+        alert.style.transition = 'opacity 0.25s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+        alert.style.opacity = '0';
+        alert.style.maxHeight = '0';
+        alert.style.marginBottom = '0';
+        alert.style.padding = '0';
+        alert.style.overflow = 'hidden';
+        setTimeout(() => { alert.style.display = 'none'; }, 310);
+        localStorage.setItem('examsFinishedAlertDismissed', '1');
+    });
+})();
+
 function bindFocusModeEscapeHatch() {
     const exitFocusModeBtn = document.getElementById('exitFocusModeBtn');
     if (exitFocusModeBtn) {
