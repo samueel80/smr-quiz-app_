@@ -1845,35 +1845,46 @@ body {
 
     /* ---- HEADER ---- */
     .app-header {
-        padding: 10px 14px;
-        gap: 10px;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px;
+        gap: 12px;
     }
     .header-brand {
-        flex: 1;
-        min-width: 0;
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        flex-direction: row;
         gap: 10px;
     }
+    .header-brand-text {
+        align-items: center;
+    }
     .header-logo-icon {
-        width: 34px !important;
-        height: 34px !important;
-        border-radius: 10px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
         flex-shrink: 0;
     }
     .header-logo-icon .material-symbols-outlined {
-        font-size: 17px !important;
+        font-size: 16px !important;
     }
     .header-title {
-        font-size: 0.95rem !important;
+        font-size: 1rem !important;
+        text-align: center;
         letter-spacing: -0.3px !important;
     }
     .header-slogan {
         display: block !important;
         font-size: 8px !important;
         letter-spacing: 0.5px !important;
+        text-align: center;
+        margin-top: 2px;
     }
     .header-controls {
-        gap: 6px;
-        flex-shrink: 0;
+        width: 100%;
+        justify-content: center;
+        gap: 8px;
     }
     /* Hide the nav button group (replaced by bottom nav) */
     .header-nav-group {
