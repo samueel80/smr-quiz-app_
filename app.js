@@ -3052,7 +3052,9 @@ function setupTimer(isRestore = false) {
             session.timeRemaining--;
             session.timeSpent++;
             updateTimerDisplay();
-            saveTestSession();
+            if (session.timeSpent % 10 === 0 || session.timeRemaining <= 0) {
+                saveTestSession();
+            }
             
             if (session.timeRemaining <= 10 && session.timeRemaining > 0) {
                 testTimer.classList.add('warning-pulse');
@@ -3073,7 +3075,10 @@ function setupTimer(isRestore = false) {
         testTimer.style.display = 'none';
         session.timerInterval = setInterval(() => {
             session.timeSpent++;
-            saveTestSession();
+            // Write only every 10 seconds to reduce CPU overhead in normal practice mode
+            if (session.timeSpent % 10 === 0) {
+                saveTestSession();
+            }
         }, 1000);
     }
 }
@@ -4029,50 +4034,96 @@ const STORE_PRODUCTS = [
     { id:'theme-night-cognitive', category:'theme', price:0, title:'Nocturno Cognitivo 🌙', desc:'Fondo azul-gris muy oscuro. Evita el deslumbramiento nocturno.', preview:{type:'palette',colors:['#0d1117','#1e3a5f','#2d4a6e','#94a3b8']} },
     { id:'theme-forest', category:'theme', price:20000, title:'Bosque Oscuro 🌲', desc:'Verde pino profundo con detalles esmeralda. Muy reposante para la vista.', preview:{type:'palette',colors:['#0a130d','#166534','#16a34a','#d1fae5']} },
     { id:'theme-sunset', category:'theme', price:45000, title:'Atardecer 🌄', desc:'Degradado cálido de rosa a naranja. Energía y creatividad.', preview:{type:'palette',colors:['#1a0610','#9d174d','#f97316','#fef9c3']} },
+    { id:'theme-nordic', category:'theme', price:75000, title:'Pizarra Nórdica 🏔️', desc:'Gris azulado frío y blanco escandinavo. Limpio y minimalista.', preview:{type:'palette',colors:['#0f172a','#38bdf8','#f1f5f9','#e2e8f0']} },
     { id:'theme-aurora', category:'theme', price:80000, title:'Aurora Boreal ✨', desc:'Cianos, magentas y esmeraldas que imitan la aurora polar.', preview:{type:'palette',colors:['#06141b','#0891b2','#7c3aed','#6ee7b7']} },
+    { id:'theme-matrix', category:'theme', price:120000, title:'Neon Matrix 📟', desc:'Verde fósforo clásico sobre negro puro estilo retro hacker.', preview:{type:'palette',colors:['#020617','#22c55e','#4ade80','#bbf7d0']} },
     { id:'theme-sevilla', category:'theme', price:150000, title:'Sevilla Especial 💃', desc:'Diseño en carmesí y albero. Sevilla tiene un color especial.', preview:{type:'palette',colors:['#1a0a05','#c0392b','#e67e22','#f9e4b7']} },
+    { id:'theme-dracula', category:'theme', price:250000, title:'Drácula Gótico 🧛', desc:'Morados y rosados oscuros con acento amarillo Drácula clásico.', preview:{type:'palette',colors:['#1e1e2e','#ff79c6','#bd93f9','#f8f8f2']} },
+    { id:'theme-latte', category:'theme', price:350000, title:'Café Latte ☕', desc:'Tonos marrones suaves y crema para un ambiente cálido.', preview:{type:'palette',colors:['#1e1b18','#d97706','#b45309','#fff7ed']} },
     { id:'theme-cyber', category:'theme', price:500000, title:'Cyberpunk 🤖', desc:'Amarillo eléctrico y cian neon sobre negro profundo. Gamer edition.', preview:{type:'palette',colors:['#000000','#facc15','#22d3ee','#f0abfc']} },
+    { id:'theme-pastel', category:'theme', price:600000, title:'Rosa Lavanda 🌸', desc:'Lavanda y rosa sobre fondo violeta oscuro muy elegante.', preview:{type:'palette',colors:['#180e1e','#ec4899','#f472b6','#fae8ff']} },
     { id:'theme-malaga', category:'theme', price:2000000, title:'Málaga Especial 🌅', desc:'Azul mediterráneo del Málaga pa el mundo. Exclusivo.', preview:{type:'palette',colors:['#060d1a','#0369a1','#0ea5e9','#bae6fd']} },
-
+    { id:'theme-scifi', category:'theme', price:750000, title:'Espacial Sci-Fi 🚀', desc:'Tonos violetas, índigos e iluminados de neón cian del espacio profundo.', preview:{type:'palette',colors:['#020205','#6366f1','#06b6d4','#f43f5e']} },
+    { id:'theme-emerald', category:'theme', price:900000, title:'Esmeralda Lujoso 💎', desc:'Tonos verde esmeralda y detalles en oro y menta premium.', preview:{type:'palette',colors:['#022c22','#10b981','#34d399','#f43f5e']} },
+    { id:'theme-sakura', category:'theme', price:1000000, title:'Sakura en Flor 🌸', desc:'Precioso degradado rosa cerezo y vino oscuro japonés.', preview:{type:'palette',colors:['#27131a','#f472b6','#10b981','#f43f5e']} },
+    { id:'theme-ocean', category:'theme', price:1250000, title:'Océano Profundo 🌊', desc:'Tonos azul marino y cianes brillantes para calmar la mente.', preview:{type:'palette',colors:['#031525','#0ea5e9','#22c55e','#ef4444']} },
+    { id:'theme-obsidian', category:'theme', price:1500000, title:'Obsidiana Pura 🕶️', desc:'Estilo monocromático ultra minimalista y elegante en negro y blanco.', preview:{type:'palette',colors:['#09090b','#fafafa','#22c55e','#ef4444']} },
+ 
     // FONTS
     { id:'font-default', category:'font', price:0, title:'Outfit & Jakarta', desc:'Tipografía estándar de la interfaz. Moderna y limpia.', preview:{type:'font',sample:'Aa',family:'Outfit, sans-serif',hint:'Predeterminada'} },
     { id:'font-inter', category:'font', price:10000, title:'Inter', desc:'Sans-serif de alta legibilidad en escritorio y móvil.', preview:{type:'font',sample:'Aa',family:'Inter, sans-serif',hint:'Alta legibilidad'} },
+    { id:'font-ubuntu', category:'font', price:15000, title:'Ubuntu', desc:'Tipografía moderna y redondeada con excelente legibilidad en móvil.', preview:{type:'font',sample:'Ab',family:'"Ubuntu", sans-serif',hint:'Redondeada'} },
     { id:'font-space-grotesk', category:'font', price:20000, title:'Space Grotesk', desc:'Geométrica y tecnológica. Futurista y muy legible.', preview:{type:'font',sample:'Ag',family:'"Space Grotesk", sans-serif',hint:'Futurista'} },
     { id:'font-source-sans', category:'font', price:25000, title:'Source Sans 3', desc:'Legibilidad perfecta en bloques de texto continuo.', preview:{type:'font',sample:'Aa',family:'"Source Sans 3", sans-serif',hint:'Texto largo'} },
+    { id:'font-fira', category:'font', price:30000, title:'Fira Code', desc:'Monoespaciada de programación. Súper clara para código y definiciones.', preview:{type:'font',sample:'f()',family:'"Fira Code", monospace',hint:'Código / Mono'} },
     { id:'font-roboto-mono', category:'font', price:35000, title:'Roboto Mono', desc:'Monoespaciada. Ideal para definiciones técnicas y código.', preview:{type:'font',sample:'01',family:'"Roboto Mono", monospace',hint:'Mono / Técnica'} },
+    { id:'font-lexend', category:'font', price:45000, title:'Lexend', desc:'Diseñada específicamente para mejorar la fluidez y velocidad de lectura.', preview:{type:'font',sample:'Aa',family:'"Lexend", sans-serif',hint:'Lectura Rápida'} },
     { id:'font-atkinson', category:'font', price:50000, title:'Atkinson Hyperlegible', desc:'Caracteres diferenciables para facilitar el reconocimiento visual.', preview:{type:'font',sample:'Aa',family:'"Atkinson Hyperlegible", sans-serif',hint:'Dislexia-friendly'} },
     { id:'font-playfair', category:'font', price:60000, title:'Playfair Display', desc:'Serif elegante con mucho carácter. Para un estilo premium.', preview:{type:'font',sample:'Aa',family:'"Playfair Display", serif',hint:'Elegante'} },
+    { id:'font-cinzel', category:'font', price:75000, title:'Cinzel Academic', desc:'Inspirada en la caligrafía clásica romana. Estilo académico de prestigio.', preview:{type:'font',sample:'IV',family:'"Cinzel", serif',hint:'Académica'} },
+    { id:'font-cabin', category:'font', price:90000, title:'Cabin', desc:'Sans-serif humanista con proporciones excelentes y lectura cómoda.', preview:{type:'font',sample:'Aa',family:'"Cabin", sans-serif',hint:'Equilibrada'} },
     { id:'font-noto-sans', category:'font', price:100000, title:'Noto Sans', desc:'Excelente rendimiento y contraste para lectura digital.', preview:{type:'font',sample:'Aa',family:'"Noto Sans", sans-serif',hint:'Universal'} },
-
+    { id:'font-poppins', category:'font', price:40000, title:'Poppins', desc:'Limpia y moderna sans-serif geométrica altamente estética.', preview:{type:'font',sample:'Aa',family:'"Poppins", sans-serif',hint:'Moderna / Limpia'} },
+    { id:'font-montserrat', category:'font', price:65000, title:'Montserrat', desc:'Clásica sans-serif geométrica con gran carácter tipográfico.', preview:{type:'font',sample:'Aa',family:'"Montserrat", sans-serif',hint:'Gran carácter'} },
+    { id:'font-quicksand', category:'font', price:80000, title:'Quicksand Rounded', desc:'Tipografía redondeada y amable que reduce el estrés visual.', preview:{type:'font',sample:'Ab',family:'"Quicksand", sans-serif',hint:'Redondeada / Relax'} },
+    { id:'font-merriweather', category:'font', price:120000, title:'Merriweather', desc:'Serif con excelente legibilidad y diseño premium para pantallas.', preview:{type:'font',sample:'Ag',family:'"Merriweather", serif',hint:'Serif Premium'} },
+    { id:'font-jetbrains', category:'font', price:150000, title:'JetBrains Mono', desc:'La tipografía preferida por desarrolladores, optimizada para leer código.', preview:{type:'font',sample:'i++',family:'"JetBrains Mono", monospace',hint:'Dev / Mono'} },
+ 
     // BUTTONS
     { id:'btn-default', category:'button', price:0, title:'Redondeado Estándar', desc:'Estilo de botones por defecto. Suave y profesional.', preview:{type:'button',style:'background:#2563eb;border-radius:8px;color:white;border:none;',label:'Responder'} },
     { id:'btn-minimal', category:'button', price:15000, title:'Minimalista Outline', desc:'Solo el borde visible. Elegancia y sencillez máxima.', preview:{type:'button',style:'background:transparent;border:1.5px solid rgba(255,255,255,0.5);border-radius:8px;color:white;',label:'Responder'} },
     { id:'btn-futuristic', category:'button', price:25000, title:'Botón Futurista 🔮', desc:'Bordes rectos con sombra de neón sutil. Estilo tech.', preview:{type:'button',style:'background:transparent;border:1px solid #22d3ee;border-radius:2px;color:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,0.4);',label:'Responder'} },
+    { id:'btn-neon-pulse', category:'button', price:30000, title:'Neón Pulsante ⚡', desc:'Efecto de neón azul con sombra exterior difuminada.', preview:{type:'button',style:'background:#090d16;border:2px solid #38bdf8;border-radius:6px;color:#38bdf8;box-shadow:0 0 10px rgba(56,189,248,0.5);',label:'Responder'} },
     { id:'btn-gradient', category:'button', price:40000, title:'Gradiente Suave 🌈', desc:'Degradado horizontal de colores vivos en cada botón.', preview:{type:'button',style:'background:linear-gradient(90deg,#f97316,#ec4899);border:none;border-radius:8px;color:white;',label:'Responder'} },
+    { id:'btn-border-gradient', category:'button', price:50000, title:'Borde de Aura 🪐', desc:'Fondo oscuro con un borde que brilla en degradado violeta.', preview:{type:'button',style:'background:#1e293b;border:1.5px solid #c084fc;border-radius:30px;color:white;box-shadow:0 2px 6px rgba(192,132,252,0.2);',label:'Responder'} },
     { id:'btn-glass', category:'button', price:75000, title:'Cristal Glass 🔮', desc:'Efecto de cristal esmerilado con fondo semitransparente.', preview:{type:'button',style:'background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:white;',label:'Responder'} },
+    { id:'btn-gamer-red', category:'button', price:120000, title:'Gamer Retro Red 🔴', desc:'Rojo intenso gaming con efecto 3D clásico al presionar.', preview:{type:'button',style:'background:#dc2626;border-bottom:4px solid #991b1b;border-radius:4px;color:white;font-weight:bold;',label:'RESPONDER'} },
     { id:'btn-pixel', category:'button', price:150000, title:'Retro Pixel 👾', desc:'Cuadrados con borde grueso y estilo arcade retro. Gamer.', preview:{type:'button',style:'background:#1a1a2e;border:3px solid #e94560;border-radius:0;color:#e94560;font-family:monospace;letter-spacing:1px;',label:'RESPONDER'} },
+    { id:'btn-soft-shadow', category:'button', price:200000, title:'Soft Shadows ☁️', desc:'Fondo semi-translúcido con una sombra extremadamente suave.', preview:{type:'button',style:'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:20px;color:#a5b4fc;box-shadow:0 8px 16px rgba(0,0,0,0.3);',label:'Responder'} },
+    { id:'btn-future-yellow', category:'button', price:750000, title:'Futurista Amarillo 📟', desc:'Cyberpunk amarillo vibrante con esquinas planas marcadas.', preview:{type:'button',style:'background:#facc15;border:none;border-radius:0;color:black;font-weight:900;letter-spacing:1px;box-shadow:3px 3px 0px #0891b2;',label:'RESPONDER'} },
     { id:'btn-glow', category:'button', price:1000000, title:'Ultra Resplandor ✨', desc:'Animación de pulso luminosa constante. Efecto premium.', preview:{type:'button',style:'background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:8px;color:white;box-shadow:0 0 18px rgba(139,92,246,0.7);',label:'Responder'} },
-
+    { id:'btn-retro-gold', category:'button', price:300000, title:'Oro Retro 🪙', desc:'Botones dorados con relieve y brillo clásico de monedas arcade.', preview:{type:'button',style:'background:linear-gradient(135deg,#d97706,#fbbf24);border:2px solid #f59e0b;border-radius:12px;color:#1e1b18;font-weight:700;',label:'Responder'} },
+    { id:'btn-cyber-pink', category:'button', price:450000, title:'Cyber Punk Pink 🌸', desc:'Bordes biselados estilo cyberpunk rosa flúor.', preview:{type:'button',style:'background:transparent;border:2px solid #ec4899;border-radius:0;color:#ec4899;font-weight:800;',label:'RESPONDER'} },
+    { id:'btn-frosted-glass', category:'button', price:600000, title:'Bruma de Cristal 🌁', desc:'Fondo de cristal esmerilado con desenfoque de fondo ultra moderno.', preview:{type:'button',style:'background:rgba(255,255,255,0.03);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.12);border-radius:16px;color:white;',label:'Responder'} },
+    { id:'btn-outline-glow', category:'button', price:850000, title:'Esmeralda Neón ❇️', desc:'Diseño redondeado de borde verde neón con aura pulsante.', preview:{type:'button',style:'background:transparent;border:2.5px solid #10b981;border-radius:50px;color:#10b981;font-weight:700;',label:'Responder'} },
+    { id:'btn-liquid-metal', category:'button', price:1200000, title:'Metal Líquido 🎛️', desc:'Efecto cromado tridimensional con brillo metálico táctil.', preview:{type:'button',style:'background:linear-gradient(180deg,#f3f4f6,#9ca3af);border:1px solid #d1d5db;border-radius:8px;color:#111827;font-weight:700;',label:'RESPONDER'} },
+ 
     // PHRASES
     { id:'phrase-malaga1', category:'phrase', price:0, title:'de málaga pa el mundo 🌍', desc:'Lema por defecto de la cabecera.', preview:{type:'phrase',text:'De Málaga pa el mundo 🌍',color:'#ef4444'} },
     { id:'phrase-motivacion1', category:'phrase', price:5000, title:'💥 A tope, el examen no espera!', desc:'Para activar el modo bestia antes de un test.', preview:{type:'phrase',text:'💥 A tope, el examen no espera!',color:'#f87171'} },
     { id:'phrase-motivacion2', category:'phrase', price:8000, title:'🤖 Modo IA activado', desc:'Para los que se sienten en el futuro estudiando.', preview:{type:'phrase',text:'🤖 Modo IA activado',color:'#6ee7b7'} },
     { id:'phrase-malaga2', category:'phrase', price:10000, title:'🍋 ¡Qué pechá de estudiar! 🍋', desc:'Lema malagueño para los días de estudio intenso.', preview:{type:'phrase',text:'🍋 ¡Qué pechá de estudiar!',color:'#facc15'} },
+    { id:'phrase-andalucia', category:'phrase', price:15000, title:'🟢 ¡Viva Andalucía libre! 🟢', desc:'Frase de orgullo andaluz.', preview:{type:'phrase',text:'🟢 ¡Viva Andalucía libre! 🟢',color:'#10b981'} },
     { id:'phrase-madrid1', category:'phrase', price:20000, title:'🐻 De Madrid al cielo ☁️', desc:'Lema clásico madrileño.', preview:{type:'phrase',text:'🐻 De Madrid al cielo',color:'#60a5fa'} },
+    { id:'phrase-esfuerzo', category:'phrase', price:22000, title:'💪 El esfuerzo trae éxito', desc:'Lema motivador para dar el máximo en cada test.', preview:{type:'phrase',text:'💪 El esfuerzo de hoy es el éxito de mañana',color:'#fbbf24'} },
     { id:'phrase-sevilla1', category:'phrase', price:25000, title:'💃 Sevilla tiene un color especial 💃', desc:'Lema de la capital andaluza.', preview:{type:'phrase',text:'💃 Sevilla tiene un color especial',color:'#f97316'} },
     { id:'phrase-galicia', category:'phrase', price:30000, title:'🌊 Galicia Calidade 🌊', desc:'Para los que estudian con la lluvia de fondo.', preview:{type:'phrase',text:'🌊 Galicia Calidade',color:'#38bdf8'} },
+    { id:'phrase-exito', category:'phrase', price:35000, title:'🎓 ¡A por el aprobado con nota! 🎓', desc:'Para enfocarse en la excelencia académica.', preview:{type:'phrase',text:'🎓 ¡A por el aprobado con nota! 🎓',color:'#a78bfa'} },
     { id:'phrase-barcelona', category:'phrase', price:35000, title:'🗼 Barcelona més que un club', desc:'Homenaje a la ciudad condal.', preview:{type:'phrase',text:'🗼 Barcelona més que un club',color:'#f472b6'} },
     { id:'phrase-madrid2', category:'phrase', price:40000, title:'🚇 ¡Qué mazo preguntas! 🚇', desc:'Expresión típica madrileña para los tests gigantes.', preview:{type:'phrase',text:'🚇 ¡Qué mazo preguntas!',color:'#a78bfa'} },
+    { id:'phrase-focus', category:'phrase', price:45000, title:'🧘 Concentración máxima', desc:'Para recordar mantener la calma durante los exámenes.', preview:{type:'phrase',text:'🧘 Concentración máxima, mente de acero',color:'#22d3ee'} },
     { id:'phrase-sevilla2', category:'phrase', price:50000, title:'🍊 ¡Mi arma, a por el diez! 🍊', desc:'Slogan motivador sevillano.', preview:{type:'phrase',text:'🍊 ¡Mi arma, a por el diez!',color:'#fb923c'} },
+    { id:'phrase-focus-smr', category:'phrase', price:75000, title:'💻 SMR al poder', desc:'Lema técnico para motivarte frente a las pantallas.', preview:{type:'phrase',text:'💻 SMR al poder, futuros administradores',color:'#f472b6'} },
     { id:'phrase-cesur', category:'phrase', price:100000, title:'🎓 Orgullo Cesur 🎓', desc:'Lema oficial para los alumnos de Cesur.', preview:{type:'phrase',text:'🎓 Orgullo Cesur',color:'#34d399'} },
+    { id:'phrase-linux', category:'phrase', price:60000, title:'🐧 sudo rm -rf /dudas', desc:'Comando hacker para eliminar cualquier duda del examen.', preview:{type:'phrase',text:'🐧 sudo rm -rf /dudas',color:'#22d3ee'} },
+    { id:'phrase-coffee', category:'phrase', price:85000, title:'☕ Más café, menos errores', desc:'El combustible oficial de todo informático.', preview:{type:'phrase',text:'☕ Más café, menos errores',color:'#fb923c'} },
+    { id:'phrase-matrix', category:'phrase', price:120000, title:'🕶️ Empiezo a ver el código...', desc:'Lema geek de concentración máxima.', preview:{type:'phrase',text:'🕶️ Empiezo a ver el código de la Matrix',color:'#4ade80'} },
+    { id:'phrase-git', category:'phrase', price:150000, title:'🐙 git commit -m "aprobado"', desc:'Para guardar el progreso hacia el éxito en tu repositorio personal.', preview:{type:'phrase',text:'🐙 git commit -m "aprobado asegurado"',color:'#f472b6'} },
+    { id:'phrase-cibersec', category:'phrase', price:250000, title:'🔒 Mi cerebro es inhaqueable', desc:'Modo seguridad máxima para no fallar una sola pregunta.', preview:{type:'phrase',text:'🔒 Mi cerebro es inhaqueable hoy',color:'#a78bfa'} },
 ];
 
 const STORE_BODY_CLASSES = [
     'theme-concentration', 'theme-memory', 'theme-reading', 'theme-night-cognitive',
     'theme-sevilla', 'theme-malaga', 'theme-forest', 'theme-sunset', 'theme-aurora', 'theme-cyber',
+    'theme-nordic', 'theme-matrix', 'theme-dracula', 'theme-latte', 'theme-pastel',
+    'theme-scifi', 'theme-emerald', 'theme-sakura', 'theme-ocean', 'theme-obsidian',
     'font-inter', 'font-source-sans', 'font-atkinson', 'font-noto-sans',
     'font-roboto-mono', 'font-playfair', 'font-space-grotesk',
+    'font-ubuntu', 'font-fira', 'font-lexend', 'font-cinzel', 'font-cabin',
+    'font-poppins', 'font-montserrat', 'font-quicksand', 'font-merriweather', 'font-jetbrains',
     'btn-futuristic', 'btn-pixel', 'btn-glow', 'btn-glass', 'btn-gradient', 'btn-minimal',
+    'btn-neon-pulse', 'btn-border-gradient', 'btn-gamer-red', 'btn-soft-shadow', 'btn-future-yellow',
+    'btn-retro-gold', 'btn-cyber-pink', 'btn-frosted-glass', 'btn-outline-glow', 'btn-liquid-metal',
     'dyslexia-active', 'high-concentration-active', 'intensive-study-active'
 ];
 
@@ -4135,7 +4186,10 @@ function applyStoreCustomizations() {
                 word-spacing: 0.2em !important;
                 line-height: 1.8 !important;
             }
-            body.dyslexia-active p, body.dyslexia-active span, body.dyslexia-active button, body.dyslexia-active h2 {
+            body.dyslexia-active p:not(.store-modal *):not(.store-grid *), 
+            body.dyslexia-active span:not(.store-modal *):not(.store-grid *), 
+            body.dyslexia-active button:not(.store-modal *):not(.store-grid *), 
+            body.dyslexia-active h2:not(.store-modal *):not(.store-grid *) {
                 letter-spacing: 0.12em !important;
                 line-height: 1.8 !important;
             }
@@ -4161,7 +4215,10 @@ function applyStoreCustomizations() {
         else if (lSpacing === 'wider') spacingVal = '1.5px';
         
         stylesText += `
-            body, p, span, button {
+            body, 
+            p:not(.store-modal *):not(.store-grid *), 
+            span:not(.store-modal *):not(.store-grid *), 
+            button:not(.store-modal *):not(.store-grid *) {
                 font-size: ${sizeVal} !important;
                 line-height: ${heightVal} !important;
                 letter-spacing: ${spacingVal} !important;
@@ -4226,7 +4283,25 @@ function applyStoreCustomizations() {
     if (sloganEl) {
         const activePhraseObj = STORE_PRODUCTS.find(p => p.id === (db.activePhrase || 'phrase-malaga1'));
         if (activePhraseObj) {
-            sloganEl.innerHTML = activePhraseObj.title;
+            const oldText = sloganEl.innerHTML;
+            const newText = activePhraseObj.preview ? activePhraseObj.preview.text : activePhraseObj.title;
+            sloganEl.innerHTML = newText;
+            
+            // Set dynamic color and glow
+            if (activePhraseObj.preview && activePhraseObj.preview.color) {
+                sloganEl.style.color = activePhraseObj.preview.color;
+                sloganEl.style.textShadow = `0 0 10px ${activePhraseObj.preview.color}40`;
+            } else {
+                sloganEl.style.color = '#f87171';
+                sloganEl.style.textShadow = 'none';
+            }
+            
+            // Play a unique entrance animation if changed
+            if (oldText !== newText) {
+                sloganEl.classList.remove('slogan-animate');
+                void sloganEl.offsetWidth; // force browser layout reflow
+                sloganEl.classList.add('slogan-animate');
+            }
         }
     }
     
@@ -4350,7 +4425,7 @@ function renderStore() {
             <button class="${btnClass}" data-id="${p.id}" ${isActive ? 'disabled' : ''}>${btnText}</button>
         `;
 
-        itemCard.querySelector('button').addEventListener('click', () => {
+        itemCard.querySelector('.store-item-btn').addEventListener('click', () => {
             handleStoreAction(p, isPurchased);
         });
 
@@ -4523,6 +4598,10 @@ if (cogBtn && cogDropdown) {
     });
     // Close when clicking outside
     document.addEventListener('click', (e) => {
+        // Prevent closing the cognitive settings panel when interacting inside the store modal
+        const isStoreClick = storeModal && (storeModal.contains(e.target) || e.target === openStoreBtn || e.target === balanceBadge);
+        if (isStoreClick) return;
+
         if (!cogDropdown.contains(e.target) && e.target !== cogBtn) {
             cogDropdown.style.display = 'none';
             cogBtn.classList.remove('hbtn-active');
